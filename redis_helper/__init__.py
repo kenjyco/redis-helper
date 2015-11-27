@@ -14,8 +14,8 @@ def next_object_id(key, sep=':', start=1000, redis_client=None):
     redis_client.incr(k)
     return '{}{}{}'.format(key, sep, _id)
 
-def index_hash_field(hash_id, field, value, sep=':', use_time=False, score=0,
-                     redis_client=None):
+def index_hash_field(hash_id, field, value, prefix='', sep=':', use_time=False,
+                     score=0, redis_client=None):
     """Add 'hash_id' to a set (or sorted set), for indexing a field of the hash
 
     If 'use_time' or 'score' are provided, then add to a sorted set. Otherwise,
@@ -24,11 +24,16 @@ def index_hash_field(hash_id, field, value, sep=':', use_time=False, score=0,
     - hash_id: the key name of the hash
     - field: name of the field in the hash to index
     - value: value of the field for the hash
+    - prefix: a string that the generated index key name should start with
     - use_time: if True, use current epoch time as score and add to sorted set
     - score: if non-zero, use as score and add to sorted set
     """
     redis_client = redis_client or REDIS
-    k = 'cli_qa:idx{}{}{}{}'.format(sep, field, sep, value)
+    if prefix:
+        k = '{}{}idx{}{}{}{}'.format(prefix, sep, sep, field, sep, value)
+    else:
+        k = 'idx{}{}{}{}'.format(sep, field, sep, value)
+
     if use_time:
         redis_client.zadd(k, time.time(), hash_id)
     elif score:
@@ -37,19 +42,21 @@ def index_hash_field(hash_id, field, value, sep=':', use_time=False, score=0,
         redis_client.sadd(k, hash_id)
     return k
 
-def add_dict(hash_id, somedict, indexfields=[], redis_client=None):
+def add_dict(hash_id, somedict, indexfields=[], prefix='', redis_client=None):
     """Add a python dictionary to redis (or update it), at a specified key
 
     - hash_id: redis key for the hash to create/update
     - somedict: a python dictionary object (flat is better, i.e scalar values)
     - indexfields: list of fields in the newly created redis hash to be indexed
+    - prefix: a string that the generated index key name should start with
 
     add_dict('somekey', {'a': 3, 'z': 9, 'y': 2, 'b': 4}, indexfields=['z', 'a'])
     """
     redis_client = redis_client or REDIS
     redis_client.hmset(hash_id, somedict)
     for field in indexfields:
-        index_hash_field(hash_id, field, somedict.get(field, ''), use_time=True)
+        index_hash_field(hash_id, field, somedict.get(field, ''), prefix=prefix,
+                         use_time=True)
     return hash_id
 
 def getall_dicts(rediskey_or_list, redis_client=None):
