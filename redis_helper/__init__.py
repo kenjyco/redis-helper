@@ -25,6 +25,7 @@ def index_hash_field(hash_id, field, value, prefix='', sep=':', use_time=False,
     - field: name of the field in the hash to index
     - value: value of the field for the hash
     - prefix: a string that the generated index key name should start with
+    - sep: delimiter character used to separate parts of hash_id
     - use_time: if True, use current epoch time as score and add to sorted set
     - score: if non-zero, use as score and add to sorted set
     """
@@ -42,22 +43,35 @@ def index_hash_field(hash_id, field, value, prefix='', sep=':', use_time=False,
         redis_client.sadd(k, hash_id)
     return k
 
-def add_dict(hash_id, somedict, indexfields=[], prefix='', redis_client=None):
+def add_dict(hash_id, somedict, indexfields=[], prefix='', sep=':',
+             use_time=False, score=0, redis_client=None):
     """Add a python dictionary to redis (or update it), at a specified key
+
+    Return a 2-item tuple containing the `hash_id` and a list of `index_ids`
+    (returned by the `index_hash_field` function).
 
     - hash_id: redis key for the hash to create/update
     - somedict: a python dictionary object (flat is better, i.e scalar values)
     - indexfields: list of fields in the newly created redis hash to be indexed
+
+    Options passed to `index_hash_field`:
+
     - prefix: a string that the generated index key name should start with
+    - sep: delimiter character used to separate parts of hash_id
+    - use_time: if True, use current epoch time as score and add to sorted set
+    - score: if non-zero, use as score and add to sorted set
 
     add_dict('somekey', {'a': 3, 'z': 9, 'y': 2, 'b': 4}, indexfields=['z', 'a'])
     """
     redis_client = redis_client or REDIS
     redis_client.hmset(hash_id, somedict)
+    index_ids = []
     for field in indexfields:
-        index_hash_field(hash_id, field, somedict.get(field, ''), prefix=prefix,
-                         use_time=True)
-    return hash_id
+        idx_id = index_hash_field(hash_id, field, somedict.get(field, ''),
+                         prefix=prefix, sep=sep, use_time=use_time, score=score,
+                         redis_client=redis_client)
+        index_ids.append(idx_id)
+    return (hash_id, index_ids)
 
 def getall_dicts(rediskey_or_list, redis_client=None):
     """Return a list of dicts (from a redis object containing redis hash_ids)
