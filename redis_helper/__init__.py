@@ -1,3 +1,7 @@
+__all__ = ['REDIS', 'next_object_id', 'index_hash_field', 'add_dict',
+           'getall_dicts'
+]
+
 import time
 from functools import partial
 from redis import StrictRedis, ResponseError
