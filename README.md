@@ -11,7 +11,31 @@ Redis Helper
 
 ## Usage
 
-> TODO
+#### Storing dictionary objects
+
+```
+from redis_helper import next_object_id, add_dict
+
+somedict = {'a': 3, 'z': 9, 'y': 2, 'b': 4}
+hash_id = next_object_id('thing:mydict')
+add_dict(hash_id, somedict, indexfields=['z', 'a'], prefix='thing',
+         use_time=True)
+```
+
+- Use `next_object_id` to get a new Redis key name
+- Use `add_dict` (with the new key name) to add a dictionary object to Redis
+
+#### Retrieving dictionary objects
+
+```
+from redis_helper import getall_dicts
+
+index = 'thing:idx:z:9'
+dicts = getall_dicts(index)
+```
+
+- Use `getall_dicts` to get a list of dictionary objects at a particular index
+  (which contains IDs of Redis hash objects)
 
 ## Background
 
