@@ -6,7 +6,12 @@ REDIS = StrictRedis()
 
 
 def next_object_id(key, sep=':', start=1000, redis_client=None):
-    """Return the next 'key' to be used for new redis object; increment 'next_id'"""
+    """Return the next 'key' to be used for new redis object; increment 'next_id'
+
+    - key: the key name
+    - sep: delimiter character used to separate parts of the key
+    - start: initial numerical id to be appended to key
+    """
     redis_client = redis_client or REDIS
     k = '{}{}next_id'.format(key, sep)
     redis_client.setnx(k, start)
