@@ -66,3 +66,72 @@ server commands.
 
 > The [helper functions][helpers] all expect an instance of `StrictRedis` to be
 > passed in as the `redis_client`.
+
+## More examples (in ipython)
+
+#### Example 1
+
+Get some strings that represent Redis key names
+
+```
+In [1]: from redis_helper import *
+
+In [2]: hash_id1 = next_object_id('misc:somedicts'); hash_id1
+Out[2]: 'misc:somedicts:1000'
+
+In [3]: hash_id2 = next_object_id('misc:somedicts'); hash_id2
+Out[3]: 'misc:somedicts:1001'
+
+In [4]: hash_id3 = next_object_id('misc:somedicts'); hash_id3
+Out[4]: 'misc:somedicts:1002'
+
+In [5]: hash_id4 = next_object_id('misc:somedicts'); hash_id4
+Out[5]: 'misc:somedicts:1003'
+
+In [6]: hash_id5 = next_object_id('misc:somedicts'); hash_id5
+Out[6]: 'misc:somedicts:1004'
+```
+
+Add some dictionaries at each key name, indexing on one common attribute
+
+```
+In [7]: add_dict(hash_id1, {'color': 'green', 'size': 'large', 'rating': 'good'}, indexfields=['color'], prefix='misc', use_time=True)
+Out[7]: ('misc:somedicts:1000', ['misc:idx:color:green'])
+
+In [8]: add_dict(hash_id2, {'color': 'brown', 'size': 'large', 'rating': 'great'}, indexfields=['color'], prefix='misc', use_time=True)
+Out[8]: ('misc:somedicts:1001', ['misc:idx:color:brown'])
+
+In [9]: add_dict(hash_id3, {'color': 'orange', 'size': 'extra large', 'rating': 'fantastic'}, indexfields=['color'], prefix='misc', use_time=True)
+Out[9]: ('misc:somedicts:1002', ['misc:idx:color:orange'])
+
+In [10]: add_dict(hash_id4, {'color': 'orange', 'texture': 'smooth', 'rating': 'fantastic'}, indexfields=['color'], prefix='misc', use_time=True)
+Out[10]: ('misc:somedicts:1003', ['misc:idx:color:orange'])
+
+In [12]: add_dict(hash_id5, {'color': 'orange', 'reflective': False, 'shape': 'cylinder', 'condition': 'fair'}, indexfields=['color'], prefix='misc', use_time=True)
+Out[12]: ('misc:somedicts:1004', ['misc:idx:color:orange'])
+```
+
+Investigate a particular index
+
+```
+In [13]: REDIS.type('misc:idx:color:orange')
+Out[13]: 'zset'
+
+In [14]: REDIS.zcard('misc:idx:color:orange')
+Out[14]: 3
+
+In [15]: REDIS.zrange('misc:idx:color:orange', 0, -1, withscores=True)
+Out[15]:
+[('misc:somedicts:1002', 1449217060.374798),
+ ('misc:somedicts:1003', 1449218335.224642),
+ ('misc:somedicts:1004', 1449218363.657641)]
+
+In [16]: getall_dicts('misc:idx:color:orange')
+Out[16]:
+[{'color': 'orange', 'rating': 'fantastic', 'size': 'extra large'},
+ {'color': 'orange', 'rating': 'fantastic', 'texture': 'smooth'},
+ {'color': 'orange',
+  'condition': 'fair',
+  'reflective': 'False',
+  'shape': 'cylinder'}]
+```
