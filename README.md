@@ -92,7 +92,7 @@ In [6]: hash_id5 = next_object_id('misc:somedicts'); hash_id5
 Out[6]: 'misc:somedicts:1004'
 ```
 
-Add some dictionaries at each key name, indexing on one common attribute
+Add some dictionaries at each key name, indexing on one common field
 
 ```
 In [7]: add_dict(hash_id1, {'color': 'green', 'size': 'large', 'rating': 'good'}, indexfields=['color'], prefix='misc', use_time=True)
