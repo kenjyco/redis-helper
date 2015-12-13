@@ -6,7 +6,7 @@ Redis Helper
 ## Install
 
 ```
-% pip install git+git://github.com/kenjyco/redis_helper.git
+% pip install redis-helper
 ```
 
 ## Usage
