@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+
 __all__ = ['REDIS', 'next_object_id', 'index_hash_field', 'add_dict',
            'getall_dicts'
 ]
@@ -98,9 +101,9 @@ def getall_dicts(rediskey_or_list, redis_client=None):
         elif obj_type == 'set':
             cmd = partial(redis_client.smembers, rediskey_or_list)
         else:
-            print '{} is a redis object of type {}'.format(
+            print('{} is a redis object of type {}'.format(
                 repr(rediskey_or_list), repr(obj_type)
-            )
+            ))
             return
 
         try:
@@ -116,10 +119,10 @@ def getall_dicts(rediskey_or_list, redis_client=None):
                     except:
                         badkeys.append((redis_client.type(hash_id), hash_id))
                 msg = 'Some keys were for non-hash redis objects!!\n{}'
-                print msg.format(repr(badkeys))
+                print(msg.format(repr(badkeys)))
                 return dicts
             else:
-                print repr(e)
+                print(repr(e))
                 return
 
     if type(rediskey_or_list) in (list, tuple, set):
@@ -129,4 +132,4 @@ def getall_dicts(rediskey_or_list, redis_client=None):
         ]
     else:
         msg = '{} is not a redis object or a Python list/tuple/set!!\nType is {}'
-        print msg.format(repr(rediskey_or_list), repr(type(rediskey_or_list)))
+        print(msg.format(repr(rediskey_or_list), repr(type(rediskey_or_list))))

@@ -2,13 +2,13 @@ from setuptools import setup
 
 setup(
     name='redis-helper',
-    version='0.1.0',
+    version='0.1.1',
     description='Helper functions to store/retrieve redis objects',
     author='Ken',
     author_email='kenjyco@gmail.com',
     license='MIT',
     url='https://github.com/kenjyco/redis_helper',
-    download_url='https://github.com/kenjyco/redis_helper/tarball/v0.1.0',
+    download_url='https://github.com/kenjyco/redis_helper/tarball/v0.1.1',
     packages=['redis_helper'],
     install_requires=[
         'redis>=2.10,<3.0',
@@ -19,8 +19,11 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Software Development :: Libraries',
         'Intended Audience :: Developers',
     ],
-    keywords = ['redis']
+    keywords = ['redis', 'dictionary']
 )
