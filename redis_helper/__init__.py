@@ -1,9 +1,11 @@
 from __future__ import print_function
 
 
-__all__ = ['REDIS', 'next_object_id', 'index_hash_field', 'add_dict',
-           'getall_dicts'
+__all__ = [
+    'REDIS', 'client_info', 'next_object_id', 'index_hash_field', 'add_dict',
+    'getall_dicts'
 ]
+
 
 import time
 from functools import partial
@@ -57,6 +59,7 @@ def next_object_id(key, sep=':', start=1000, redis_client=None):
     redis_client.incr(k)
     return '{}{}{}'.format(key, sep, _id)
 
+
 def index_hash_field(hash_id, field, value, prefix='', sep=':', use_time=False,
                      score=0, redis_client=None):
     """Add 'hash_id' to a set (or sorted set), for indexing a field of the hash
@@ -86,6 +89,7 @@ def index_hash_field(hash_id, field, value, prefix='', sep=':', use_time=False,
         redis_client.sadd(k, hash_id)
     return k
 
+
 def add_dict(hash_id, somedict, indexfields=[], prefix='', sep=':',
              use_time=False, score=0, redis_client=None):
     """Add a python dictionary to redis (or update it), at a specified key
@@ -110,11 +114,19 @@ def add_dict(hash_id, somedict, indexfields=[], prefix='', sep=':',
     redis_client.hmset(hash_id, somedict)
     index_ids = []
     for field in indexfields:
-        idx_id = index_hash_field(hash_id, field, somedict.get(field, ''),
-                         prefix=prefix, sep=sep, use_time=use_time, score=score,
-                         redis_client=redis_client)
+        idx_id = index_hash_field(
+            hash_id,
+            field,
+            somedict.get(field, ''),
+            prefix=prefix,
+            sep=sep,
+            use_time=use_time,
+            score=score,
+            redis_client=redis_client
+        )
         index_ids.append(idx_id)
     return (hash_id, index_ids)
+
 
 def getall_dicts(rediskey_or_list, redis_client=None):
     """Return a list of dicts (from a redis object containing redis hash_ids)
