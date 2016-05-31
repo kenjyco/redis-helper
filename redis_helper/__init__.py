@@ -10,6 +10,37 @@ from functools import partial
 from redis import StrictRedis, ResponseError
 
 REDIS = StrictRedis()
+INFO_KEYS = [
+    'connected_clients',
+    'expired_keys',
+    'keyspace_hits',
+    'keyspace_misses',
+    'os',
+    'process_id',
+    'pubsub_channels',
+    'pubsub_patterns',
+    'redis_mode',
+    'redis_version',
+    'tcp_port',
+    'total_commands_processed',
+    'role',
+    'uptime_in_seconds',
+    'uptime_in_days',
+    'used_cpu_sys',
+    'used_cpu_user',
+    'used_memory',
+    'used_memory_human',
+]
+
+
+def client_info(redis_client=None):
+    """Return a filtered info dict for redis_client"""
+    redis_client = redis_client or REDIS
+    return {
+        key: val
+        for key, val in redis_client.info().items()
+        if key in INFO_KEYS
+    }
 
 
 def next_object_id(key, sep=':', start=1000, redis_client=None):
@@ -93,7 +124,7 @@ def getall_dicts(rediskey_or_list, redis_client=None):
     """
     redis_client = redis_client or REDIS
     if redis_client.exists(rediskey_or_list):
-        obj_type = REDIS.type(rediskey_or_list)
+        obj_type = redis_client.type(rediskey_or_list)
         if obj_type == 'zset':
             cmd = partial(redis_client.zrange, rediskey_or_list, 0, -1)
         elif obj_type == 'list':
