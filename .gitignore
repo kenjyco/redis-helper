@@ -1,5 +1,6 @@
 *.sw[po]
 *.py[cod]
 env/
+venv/
 dist/
 *.egg-info/
