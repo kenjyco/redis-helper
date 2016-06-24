@@ -13,6 +13,7 @@ from redis import StrictRedis, ResponseError
 
 REDIS = StrictRedis()
 INFO_KEYS = [
+    'config_file',
     'connected_clients',
     'expired_keys',
     'keyspace_hits',
@@ -23,11 +24,11 @@ INFO_KEYS = [
     'pubsub_patterns',
     'redis_mode',
     'redis_version',
+    'role',
     'tcp_port',
     'total_commands_processed',
-    'role',
-    'uptime_in_seconds',
     'uptime_in_days',
+    'uptime_in_seconds',
     'used_cpu_sys',
     'used_cpu_user',
     'used_memory',
@@ -41,7 +42,7 @@ def client_info(redis_client=None):
     return {
         key: val
         for key, val in redis_client.info().items()
-        if key in INFO_KEYS
+        if key in INFO_KEYS or key.startswith('db')
     }
 
 
