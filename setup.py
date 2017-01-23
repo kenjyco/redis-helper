@@ -2,28 +2,29 @@ from setuptools import setup
 
 setup(
     name='redis-helper',
-    version='0.1.3',
-    description='Helper functions to store/retrieve redis objects',
+    version='0.2.0',
+    description='Easily store, index, and modify Python dicts in Redis (with flexible searching)',
     author='Ken',
     author_email='kenjyco@gmail.com',
     license='MIT',
     url='https://github.com/kenjyco/redis_helper',
-    download_url='https://github.com/kenjyco/redis_helper/tarball/v0.1.3',
+    download_url='https://github.com/kenjyco/redis_helper/tarball/v0.2.0',
     packages=['redis_helper'],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     install_requires=[
-        'redis>=2.10,<3.0',
+        'redis==2.10.5',
+        'hiredis==0.2.0',
+        'ujson==1.35',
+        'pytz',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Topic :: Software Development :: Libraries',
         'Intended Audience :: Developers',
     ],
-    keywords = ['redis', 'dictionary']
+    keywords = ['redis', 'dictionary', 'secondary index', 'events', 'model', 'log', 'data']
 )

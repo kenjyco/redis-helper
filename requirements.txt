@@ -1,1 +1,9 @@
-redis>=2.10,<3.0
+redis==2.10.5
+hiredis==0.2.0
+ujson==1.35
+pytz
+
+# For development
+ipython==5.1.0
+pdbpp==0.8.3
+pytest==3.0.5

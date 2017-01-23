@@ -1,0 +1,9 @@
+[default]
+admin_timezone = America/Chicago
+admin_date_fmt = %a %m/%d/%Y %I:%M:%S %p
+
+[dev]
+redis_url = redis://localhost:6379/1
+
+[test]
+redis_url = redis://localhost:6379/9
