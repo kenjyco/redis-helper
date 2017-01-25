@@ -362,6 +362,10 @@ class RedThing(object):
                     pipe.zincrby(self._index_base_keys[field], old_value, -1)
                     pipe.sadd(index_key, hash_id)
                     pipe.zincrby(self._index_base_keys[field], data[field], 1)
+                elif field in self._json_fields:
+                    data[field] = ujson.dumps(data[field])
+                elif field in self._pickle_fields:
+                    data[field] = pickle.dumps(data[field])
         pipe.hmset(hash_id, data)
         pipe.zadd(self._ts_zset_key, now, hash_id)
         pipe.execute()
