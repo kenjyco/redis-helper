@@ -6,13 +6,15 @@ Redis Helper
 
 ## Install
 
-[settings.ini]: https://raw.githubusercontent.com/kenjyco/redis_helper/master/settings.ini.sample
 ```
 % pip install redis-helper
+
+or
+
+% pip install git+git://github.com/kenjyco/redis_helper
 ```
 
-Place a copy of the [settings.ini][] file in either `/etc/redis-helper/` or
-`~/.config/redis-helper/` and modify.
+Modify the `~/.config/redis-helper/settings.ini` file.
 
 ## Usage
 
@@ -46,6 +48,16 @@ Place a copy of the [settings.ini][] file in either `/etc/redis-helper/` or
 ```
 
 > Note: requires setuptools (i.e. `sudo apt-get install python3-setuptools`)
+
+## Dev setup
+
+```
+% git clone https://github.com/kenjyco/redis_helper
+% cd redis_helper
+% ./dev-setup.bash
+```
+
+> Create a virtual environment with extra dependencies (ipython, pdbpp, pytest).
 
 ## Background
 
