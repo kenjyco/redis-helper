@@ -1,5 +1,8 @@
+import os.path
 from setuptools import setup
 
+
+home_config_dir = os.path.expanduser('~/.config/redis-helper')
 setup(
     name='redis-helper',
     version='0.2.0',
@@ -18,6 +21,7 @@ setup(
         'ujson==1.35',
         'pytz',
     ],
+    data_files=[(home_config_dir, ['settings.ini'])],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',

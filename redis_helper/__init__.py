@@ -4,7 +4,6 @@ import os.path
 import textwrap
 import pytz
 from os import getenv
-from shutil import copyfile
 from datetime import datetime, timedelta, timezone as dt_timezone
 from functools import partial
 from itertools import product, zip_longest, chain
@@ -18,22 +17,11 @@ Use `RedThing` to get a client for each of your models.
 
 
 def _get_settings_file():
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    project_dir = os.path.dirname(root_dir)
     home_config_dir = os.path.expanduser('~/.config/redis-helper')
-    for dirname in (project_dir, home_config_dir, '/etc/redis-helper'):
+    for dirname in (home_config_dir, '/etc/redis-helper'):
         settings_file = os.path.join(dirname, 'settings.ini')
         if os.path.isfile(settings_file):
             return settings_file
-
-    # Copy the sample settings file in project_dir and return it
-    sample_file = os.path.join(project_dir, 'settings.ini.sample')
-    settings_file = os.path.join(home_config_dir, 'settings.ini')
-    if not os.path.exists(home_config_dir):
-        os.makedirs(home_config_dir)
-    copyfile(sample_file, settings_file)
-    print('\nCopied settings to {}'.format(repr(settings_file)))
-    return settings_file
 
 
 SETTINGS_FILE = _get_settings_file()
