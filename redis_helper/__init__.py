@@ -86,7 +86,7 @@ def dt_to_float_string(dt, fmt=FLOAT_STRING_FMT):
 
 def float_string_to_dt(float_string, fmt=FLOAT_STRING_FMT):
     """Return a dt object from a utc_float"""
-    return datetime.strptime(float_string, fmt)
+    return datetime.strptime(str(float_string), fmt)
 
 
 def utc_now_float_string(fmt=FLOAT_STRING_FMT):
@@ -157,7 +157,7 @@ def date_string_to_utc_float_string(date_string, timezone=None):
         '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d %H', '%Y-%m-%d', '%Y-%m', '%Y'
     ]:
         try:
-            dt = datetime.strptime(date_string, fmt)
+            dt = datetime.strptime(str(date_string), fmt)
         except ValueError:
             continue
         else:
