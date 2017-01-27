@@ -1,1 +1,2 @@
 include settings.ini
+include examples/request_logs.py

@@ -22,7 +22,7 @@ setup(
         'pytz',
     ],
     include_package_data=True,
-    data_files=[(home_config_dir, ['settings.ini'])],
+    data_files=[(home_config_dir, ['settings.ini', 'examples/request_logs.py'])],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
