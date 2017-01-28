@@ -71,7 +71,7 @@ def slow_trickle_requests(sleeptime=.234, show=False, randomsleep=False):
 
 if __name__ == '__main__':
     if request_logs.size == 0:
-        print('Run `slow_trickle_requests(randomsleep=True, show=True)` in another terminal')
+        print('\nRun `slow_trickle_requests(randomsleep=True, show=True)` in another terminal')
     else:
         print('\nrequest_logs size:', request_logs.size)
         print('\nTop 3 index values per index:')
