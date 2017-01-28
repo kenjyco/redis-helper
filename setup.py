@@ -5,13 +5,13 @@ from setuptools import setup
 home_config_dir = os.path.expanduser('~/.config/redis-helper')
 setup(
     name='redis-helper',
-    version='0.2.4',
+    version='0.2.5',
     description='Easily store, index, and modify Python dicts in Redis (with flexible searching)',
     author='Ken',
     author_email='kenjyco@gmail.com',
     license='MIT',
-    url='https://github.com/kenjyco/redis_helper',
-    download_url='https://github.com/kenjyco/redis_helper/tarball/v0.2.4',
+    url='https://github.com/kenjyco/redis-helper',
+    download_url='https://github.com/kenjyco/redis-helper/tarball/v0.2.5',
     packages=['redis_helper'],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],

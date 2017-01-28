@@ -1,8 +1,8 @@
 [rh pypi]: https://pypi.python.org/pypi/redis-helper
-[rh github]: https://github.com/kenjyco/redis_helper
-[settings]: https://github.com/kenjyco/redis_helper/blob/master/settings.ini
-[example1]: https://github.com/kenjyco/redis_helper/blob/master/examples/request_logs.py
-[dev-setup]: https://github.com/kenjyco/redis_helper/blob/master/dev-setup.bash
+[rh github]: https://github.com/kenjyco/redis-helper
+[settings]: https://github.com/kenjyco/redis-helper/blob/master/settings.ini
+[example1]: https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py
+[dev-setup]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
 
 When using `pip` to install, the sample [settings.ini][settings] and
 [request_logs.py][example1] example will be copied to the
@@ -14,17 +14,17 @@ When using `pip` to install, the sample [settings.ini][settings] and
 % pip install redis-helper
 ```
 
-## Install latest commit on master of [redis_helper from github][rh github]
+## Install latest commit on master of [redis-helper from github][rh github]
 
 ```
-% pip install git+git://github.com/kenjyco/redis_helper
+% pip install git+git://github.com/kenjyco/redis-helper
 ```
 
 ## Local development setup
 
 ```
-% git clone https://github.com/kenjyco/redis_helper
-% cd redis_helper
+% git clone https://github.com/kenjyco/redis-helper
+% cd redis-helper
 % python3 setup.py test     # optional, requires 'setuptools'
 % ./dev-setup.bash
 ```

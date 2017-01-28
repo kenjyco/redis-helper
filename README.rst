@@ -1,7 +1,7 @@
 When using ``pip`` to install, the sample
-`settings.ini <https://github.com/kenjyco/redis_helper/blob/master/settings.ini>`__
+`settings.ini <https://github.com/kenjyco/redis-helper/blob/master/settings.ini>`__
 and
-`request\_logs.py <https://github.com/kenjyco/redis_helper/blob/master/examples/request_logs.py>`__
+`request\_logs.py <https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py>`__
 example will be copied to the ``~/.config/redis-helper`` directory.
 
 Install latest tag of `redis-helper from pypi <https://pypi.python.org/pypi/redis-helper>`__
@@ -11,25 +11,25 @@ Install latest tag of `redis-helper from pypi <https://pypi.python.org/pypi/redi
 
     % pip install redis-helper
 
-Install latest commit on master of `redis\_helper from github <https://github.com/kenjyco/redis_helper>`__
-----------------------------------------------------------------------------------------------------------
+Install latest commit on master of `redis-helper from github <https://github.com/kenjyco/redis-helper>`__
+---------------------------------------------------------------------------------------------------------
 
 ::
 
-    % pip install git+git://github.com/kenjyco/redis_helper
+    % pip install git+git://github.com/kenjyco/redis-helper
 
 Local development setup
 -----------------------
 
 ::
 
-    % git clone https://github.com/kenjyco/redis_helper
-    % cd redis_helper
+    % git clone https://github.com/kenjyco/redis-helper
+    % cd redis-helper
     % python3 setup.py test     # optional, requires 'setuptools'
     % ./dev-setup.bash
 
 The
-`dev-setup.bash <https://github.com/kenjyco/redis_helper/blob/master/dev-setup.bash>`__
+`dev-setup.bash <https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash>`__
 script will create a virtual environment in the ``./venv`` directory
 with extra dependencies (ipython, pdbpp, pytest), then copy
 ``settings.ini`` to the ``~/.config/redis-helper`` directory.
