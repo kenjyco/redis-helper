@@ -4,21 +4,56 @@ Redis Helper
     Easily store, index, and modify Python dicts in Redis (with flexible
     searching).
 
-Install
--------
+Installation Methods
+====================
+
+When using ``pip`` to install, the sample
+`settings.ini <https://github.com/kenjyco/redis_helper/blob/master/settings.ini>`__
+and
+`request\_logs.py <https://github.com/kenjyco/redis_helper/blob/master/examples/request_logs.py>`__
+example will be copied to the ``~/.config/redis-helper`` directory.
+
+Latest released version of `redis-helper from pypi <https://pypi.python.org/pypi/redis-helper>`__
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
     % pip install redis-helper
 
-    or
+Latest commit on master of `redis\_helper from github <https://github.com/kenjyco/redis_helper>`__
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
 
     % pip install git+git://github.com/kenjyco/redis_helper
 
-Modify the ``~/.config/redis-helper/settings.ini`` file.
+Dev setup
+^^^^^^^^^
+
+The
+`dev-setup.bash <https://github.com/kenjyco/redis_helper/blob/master/dev-setup.bash>`__
+script will
+
+-  create a virtual environment in the ``./venv`` directory with extra
+   dependencies (ipython, pdbpp, pytest)
+-  copy ``settings.ini`` to the ``~/.config/redis-helper`` directory
+
+::
+
+    % git clone https://github.com/kenjyco/redis_helper
+    % cd redis_helper
+    % python3 setup.py test     # optional
+    % ./dev-setup.bash
+
+Tests can be run via **``venv/bin/py.test tests``** and install can be
+tested (if ``setup.py`` was modified) via
+**``venv/bin/python3 setup.py install``**.
+
+    Note: any of the above commands that involves ``setup.py`` requires
+    setuptools (i.e. ``sudo apt-get install python3-setuptools``)
 
 Usage
------
+=====
 
 .. code:: python
 
@@ -38,35 +73,8 @@ Usage
     >>> top_indexed = collection.index_field_info()
     >>> collection.delete(hash_id, ...)
 
-    Note: this is only a small usage sample. Several ``RedThing``
-    methods have many parameters.
-
-Test running
-------------
-
-::
-
-    % git clone https://github.com/kenjyco/redis_helper
-    % cd redis_helper
-    % python3 setup.py test
-
-    Note: requires setuptools (i.e.
-    ``sudo apt-get install python3-setuptools``)
-
-Dev setup
----------
-
-::
-
-    % git clone https://github.com/kenjyco/redis_helper
-    % cd redis_helper
-    % ./dev-setup.bash
-
-    Create a virtual environment with extra dependencies (ipython,
-    pdbpp, pytest).
-
 Background
-----------
+==========
 
 A `Python
 dictionary <https://docs.python.org/3/tutorial/datastructures.html#dictionaries>`__
@@ -81,13 +89,14 @@ structure server** (among other things). It is great for storing various
 types of objects that can be accessed between different programs and
 processes. When your program stops running, objects that you have stored
 in Redis will remain. To retreive an object from Redis, you must access
-it through its **key name** (kind of like a Python variable name).
+it through its **key name** (kind of like a Python variable name). The
+`redis Python package <https://github.com/andymccurdy/redis-py>`__
+provides the
+`StrictRedis <https://redis-py.readthedocs.org/en/latest/#redis.StrictRedis>`__
+class, which contains methods that correspond to all of the Redis server
+commands.
 
 A `Redis hash <http://redis.io/commands#hash>`__ is most similar to a
 Python dictionary. A "key" in a Python dictionary is analogous to a
 "field" in a Redis hash (since "key" means something different in
-Redis). The `redis-py <https://github.com/andymccurdy/redis-py>`__
-library provides the
-`StrictRedis <https://redis-py.readthedocs.org/en/latest/#redis.StrictRedis>`__
-class, which contain methods that correspond to all of the Redis server
-commands.
+Redis).
