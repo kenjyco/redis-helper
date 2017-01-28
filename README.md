@@ -1,55 +1,55 @@
-Redis Helper
-============
-
-> Easily store, index, and modify Python dicts in Redis (with flexible
-> searching).
-
 [rh pypi]: https://pypi.python.org/pypi/redis-helper
 [rh github]: https://github.com/kenjyco/redis_helper
 [settings]: https://github.com/kenjyco/redis_helper/blob/master/settings.ini
 [example1]: https://github.com/kenjyco/redis_helper/blob/master/examples/request_logs.py
 [dev-setup]: https://github.com/kenjyco/redis_helper/blob/master/dev-setup.bash
 
-# Installation Methods
-
 When using `pip` to install, the sample [settings.ini][settings] and
 [request_logs.py][example1] example will be copied to the
 `~/.config/redis-helper` directory.
 
-#### Latest released version of [redis-helper from pypi][rh pypi]
+## Install latest tag of [redis-helper from pypi][rh pypi]
 
 ```
 % pip install redis-helper
 ```
 
-#### Latest commit on master of [redis_helper from github][rh github]
+## Install latest commit on master of [redis_helper from github][rh github]
 
 ```
 % pip install git+git://github.com/kenjyco/redis_helper
 ```
 
-#### Dev setup
-
-The [dev-setup.bash][dev-setup] script will
-
-- create a virtual environment in the `./venv` directory with extra dependencies
-  (ipython, pdbpp, pytest)
-- copy `settings.ini` to the `~/.config/redis-helper` directory
+## Local development setup
 
 ```
 % git clone https://github.com/kenjyco/redis_helper
 % cd redis_helper
-% python3 setup.py test     # optional
+% python3 setup.py test     # optional, requires 'setuptools'
 % ./dev-setup.bash
 ```
 
-Tests can be run via **`venv/bin/py.test tests`** and install can be tested (if
-`setup.py` was modified) via **`venv/bin/python3 setup.py install`**.
+The [dev-setup.bash][dev-setup] script will create a virtual environment in the
+`./venv` directory with extra dependencies (ipython, pdbpp, pytest), then copy
+`settings.ini` to the `~/.config/redis-helper` directory.
 
-> Note: any of the above commands that involves `setup.py` requires setuptools
-> (i.e. `sudo apt-get install python3-setuptools`)
+## Running tests in development setup
 
-# Usage
+```
+% venv/bin/py.test tests
+```
+
+or
+
+```
+% venv/bin/py.test -vsx -rs --pdb tests
+```
+
+The `py.test` options will run tests in a verbose manner and output the reason
+why tests were skipped (if any were skipped). If there are any failing tests,
+`py.test` will stop on the first failure and drop you into the debugger.
+
+## Usage
 
 ```python
 >>> import redis_helper as rh
@@ -69,7 +69,7 @@ Tests can be run via **`venv/bin/py.test tests`** and install can be tested (if
 >>> collection.delete(hash_id, ...)
 ```
 
-# Background
+## Background
 
 [dict]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [hash]: http://redis.io/commands#hash
