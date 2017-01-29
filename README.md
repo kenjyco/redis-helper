@@ -1,11 +1,9 @@
 [rh pypi]: https://pypi.python.org/pypi/redis-helper
 [rh github]: https://github.com/kenjyco/redis-helper
 [settings]: https://github.com/kenjyco/redis-helper/blob/master/settings.ini
-[example1]: https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py
 [dev-setup]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
 
-When using `pip` to install, the sample [settings.ini][settings] and
-[request_logs.py][example1] example will be copied to the
+On install, the sample [settings.ini][settings] file will be copied to the
 `~/.config/redis-helper` directory.
 
 ## Install latest tag of [redis-helper from pypi][rh pypi]

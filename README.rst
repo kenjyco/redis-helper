@@ -1,8 +1,6 @@
-When using ``pip`` to install, the sample
+On install, the sample
 `settings.ini <https://github.com/kenjyco/redis-helper/blob/master/settings.ini>`__
-and
-`request\_logs.py <https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py>`__
-example will be copied to the ``~/.config/redis-helper`` directory.
+file will be copied to the ``~/.config/redis-helper`` directory.
 
 Install latest tag of `redis-helper from pypi <https://pypi.python.org/pypi/redis-helper>`__
 --------------------------------------------------------------------------------------------

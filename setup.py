@@ -1,11 +1,9 @@
-import os.path
 from setuptools import setup
 
 
 with open('README.rst', 'r') as fp:
     long_description = fp.read()
 
-home_config_dir = os.path.expanduser('~/.config/redis-helper')
 setup(
     name='redis-helper',
     version='0.2.6',
@@ -26,7 +24,10 @@ setup(
         'pytz',
     ],
     include_package_data=True,
-    data_files=[(home_config_dir, ['settings.ini', 'examples/request_logs.py'])],
+    package_dir={'': '.'},
+    package_data={
+        '' : ['*.ini'],
+    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
