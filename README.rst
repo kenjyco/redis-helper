@@ -56,7 +56,7 @@ Usage
 .. code:: python
 
     >>> import redis_helper as rh
-    >>> collection = rh.RedThing(..., index_fields='field1,field3')
+    >>> collection = rh.Collection(..., index_fields='field1,field3')
     >>> hash_id = collection.add(field1='', field2='', field3='', ...)
     >>> collection.add(...)
     >>> collection.add(...)

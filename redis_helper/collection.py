@@ -7,12 +7,8 @@ from functools import partial
 from redis import ResponseError
 
 
-class RedThing(object):
-    """
-
-    Possible uses:
-
-    - store events/logs and meta-data with ability to query on indexed attributes
+class Collection(object):
+    """Store, index, and modify Python dicts in redis with flexible searching
     """
     def __init__(self, namespace, name, unique_field='', index_fields='',
                  json_fields='', pickle_fields=''):

@@ -4,7 +4,7 @@ import time
 from pprint import pprint
 
 
-request_logs = rh.RedThing(
+request_logs = rh.Collection(
     'log',
     'request',
     index_fields='status,uri,host',

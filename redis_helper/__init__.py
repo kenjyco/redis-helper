@@ -14,7 +14,7 @@ from redis import StrictRedis
 
 __doc__ = """Easily store, index, and modify Python dicts in Redis (with flexible searching)
 
-Use `RedThing` to get a client for each of your models.
+Use `Collection` to get a client for each of your models.
 """
 
 
@@ -275,4 +275,4 @@ ADMIN_TIMEZONE = get_setting('admin_timezone')
 ADMIN_DATE_FMT = get_setting('admin_date_fmt')
 REDIS_URL = get_setting('redis_url')
 REDIS = StrictRedis.from_url(REDIS_URL) if REDIS_URL is not '' else None
-from .redthing import RedThing
+from .collection import Collection
