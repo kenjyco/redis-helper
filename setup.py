@@ -22,6 +22,7 @@ setup(
         'hiredis==0.2.0',
         'ujson==1.35',
         'pytz',
+        'input-helper',
     ],
     include_package_data=True,
     package_dir={'': '.'},
@@ -36,5 +37,5 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Intended Audience :: Developers',
     ],
-    keywords = ['redis', 'dictionary', 'secondary index', 'events', 'model', 'log', 'data']
+    keywords = ['redis', 'dictionary', 'secondary index', 'events', 'model', 'log', 'data', 'helper']
 )

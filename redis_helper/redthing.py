@@ -1,6 +1,7 @@
 import pickle
 import ujson
 import redis_helper as rh
+import input_helper as ih
 from collections import defaultdict
 from functools import partial
 from redis import ResponseError
@@ -25,9 +26,9 @@ class RedThing(object):
         Separate fields in strings by any of , ; |
         """
         self._unique_field = unique_field
-        index_fields_set = rh.string_to_set(index_fields)
-        self._json_fields = rh.string_to_set(json_fields)
-        self._pickle_fields = rh.string_to_set(pickle_fields)
+        index_fields_set = ih.string_to_set(index_fields)
+        self._json_fields = ih.string_to_set(json_fields)
+        self._pickle_fields = ih.string_to_set(pickle_fields)
 
         u = set([unique_field])
         invalid = (
@@ -142,7 +143,7 @@ class RedThing(object):
         - item_format: format string for each item (return a string instead of
           a dict)
         """
-        fields = rh.string_to_set(fields)
+        fields = ih.string_to_set(fields)
         num_fields = len(fields)
         if timestamp_formatter == rh.identity and include_meta:
             if ts_fmt or ts_tz or admin_fmt:
@@ -160,7 +161,7 @@ class RedThing(object):
             else:
                 _data = rh.REDIS.hgetall(hash_id)
                 data = {
-                    rh.decode(k): v
+                    ih.decode(k): v
                     for k, v in _data.items()
                 }
         except ResponseError:
@@ -172,10 +173,10 @@ class RedThing(object):
             elif field in self._pickle_fields:
                 data[field] = pickle.loads(data[field])
             else:
-                val = rh.decode(data[field])
-                data[field] = rh.from_string(val) if val is not None else None
+                val = ih.decode(data[field])
+                data[field] = ih.from_string(val) if val is not None else None
         if include_meta:
-            data['_id'] = rh.decode(hash_id)
+            data['_id'] = ih.decode(hash_id)
             data['_ts'] = timestamp_formatter(
                 rh.REDIS.zscore(self._ts_zset_key, hash_id)
             )
@@ -261,7 +262,7 @@ class RedThing(object):
         """
         if self.size <= 500:
             return sorted([
-                (rh.decode(key), rh.decode(rh.REDIS.type(key)))
+                (ih.decode(key), ih.decode(rh.REDIS.type(key)))
                 for key in rh.REDIS.scan_iter('{}*'.format(self._base_key))
             ])
         else:
@@ -375,7 +376,7 @@ class RedThing(object):
         results = []
         changes_hash_key = self._make_key(hash_id, '_changes')
         for name, value in rh.REDIS.hgetall(changes_hash_key).items():
-            field, timestamp = rh.decode(name).split('--')
+            field, timestamp = ih.decode(name).split('--')
             results.append({
                 '_ts_raw': timestamp,
                 '_ts_admin': rh.utc_float_to_pretty(
@@ -395,7 +396,7 @@ class RedThing(object):
     def recent_unique_values(self, limit=10):
         """Return list of limit most recent unique values"""
         return [
-            rh.decode(val)
+            ih.decode(val)
             for val in rh.REDIS.zrevrange(self._id_zset_key, start=0, end=limit-1)
         ]
 
@@ -407,7 +408,7 @@ class RedThing(object):
         results = []
         for index_field, base_key in sorted(self._index_base_keys.items()):
             results.extend([
-                (':'.join([index_field, rh.decode(name)]), int(count))
+                (':'.join([index_field, ih.decode(name)]), int(count))
                 for name, count in rh.zshow(base_key, end=limit-1)
             ])
         return results
@@ -424,7 +425,7 @@ class RedThing(object):
         tmp_keys = []
         d = defaultdict(list)
         stat_base_names = {}
-        terms = rh.string_to_set(terms)
+        terms = ih.string_to_set(terms)
         now = self.now_utc_float
         for term in terms:
             index_field, value = term.split(':')
@@ -584,7 +585,7 @@ class RedThing(object):
                     else:
                         d = {}
                         if include_meta:
-                            d['_id'] = rh.decode(hash_id)
+                            d['_id'] = ih.decode(hash_id)
                             d['_ts'] = timestamp_formatter(timestamp)
                             d['_pos'] = i
                         if item_format:
@@ -616,7 +617,7 @@ class RedThing(object):
         per selected item (list of lists)
         """
         assert action in ('update', 'delete'), 'action can only be "update" or "delete"'
-        update_fields = rh.string_to_set(update_fields)
+        update_fields = ih.string_to_set(update_fields)
         if action == 'update':
             assert update_fields != set(), 'update_fields is required if action is "update"'
             assert self._unique_field not in update_fields, (
@@ -625,7 +626,7 @@ class RedThing(object):
         find_kwargs.update(dict(admin_fmt=True, include_meta=True))
         found = self.find(**find_kwargs)
         assert type(found) == list, 'Results contain multiple time ranges... not allowed for now'
-        selected = rh.make_selections(
+        selected = ih.make_selections(
             found,
             item_format=menu_item_format,
             wrap=False
@@ -641,7 +642,7 @@ class RedThing(object):
             if action == 'update':
                 new_data = {}
                 for field in update_fields:
-                    resp = rh.user_input('value for {} field'.format(repr(field)))
+                    resp = ih.user_input('value for {} field'.format(repr(field)))
                     if resp:
                         new_data[field] = resp
                 if new_data:
@@ -662,11 +663,11 @@ class RedThing(object):
         size_stats = []
         results = {}
         for name, num in rh.REDIS.hgetall(self._find_stats_hash_key).items():
-            name, _type = rh.decode(name).split('--')
+            name, _type = ih.decode(name).split('--')
             if _type == 'count':
-                count_stats.append((name, int(rh.decode(num))))
+                count_stats.append((name, int(ih.decode(num))))
             elif _type == 'last_size':
-                size_stats.append((name, int(rh.decode(num))))
+                size_stats.append((name, int(ih.decode(num))))
         count_stats.sort(key=lambda x: x[1], reverse=True)
         size_stats.sort(key=lambda x: x[1], reverse=True)
         results['counts'] = count_stats[:limit]
@@ -675,7 +676,7 @@ class RedThing(object):
         newest = rh.zshow(self._find_searches_zset_key, end=3*(limit-1))
         for name, ts in newest:
             results['timestamps'].append((
-                rh.decode(name),
+                ih.decode(name),
                 ts,
                 rh.utc_float_to_pretty(ts, fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE)
             ))
