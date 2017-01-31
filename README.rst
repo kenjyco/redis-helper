@@ -71,6 +71,53 @@ Usage
     >>> top_indexed = collection.index_field_info()
     >>> collection.delete(hash_id, ...)
 
+Example
+-------
+
+    TODO
+
+Settings, environments, testing, and debugging
+----------------------------------------------
+
+When using ``venv/bin/py.test -vsx -rs --pdb tests``, tests will stop
+running on the first failure and drop you into a
+`pdb++ <https://pypi.python.org/pypi/pdbpp/>`__ debugger session.
+
+To trigger a debugger session at a specific place in the code, insert
+the following, one line above where you want to inspect
+
+::
+
+    import pdb; pdb.set_trace()
+
+To start the debugger inside test code, use
+
+::
+
+    pytest.set_trace()
+
+-  use ``(l)ist`` to list context lines
+-  use ``(n)ext`` to move on to the next statement
+-  use ``(s)tep`` to step into a function
+-  use ``(c)ontinue`` to continue to next break point (i.e.
+   ``set_trace()`` lines in your code)
+-  use ``sticky`` to toggle sticky mode (to constantly show the
+   currently executing code as you move through with the debugger)
+-  use ``pp`` to pretty print a variable or statement
+
+If the redis server at ``redis_url`` (in the **test section** of
+``~/.config/redis-server/settings.ini``) is not running or is not empty,
+redis server tests will be skipped.
+
+Use the ``APP_ENV`` environment variable to specify which section of the
+``settings.ini`` file your settings will be loaded from. Any settings in
+the ``default`` section can be overwritten if explicity set in another
+section.
+
+-  if no ``APP_ENV`` is explicitly set, ``dev`` is assumed
+-  the ``APP_ENV`` setting is overwritten to be ``test`` no matter what
+   was set when calling ``py.test`` tests
+
 Background
 ----------
 
