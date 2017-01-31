@@ -28,6 +28,7 @@ def _get_settings_file():
             makedirs(home_config_dir)
         except FileExistsError:
             pass
+        print('copying {} -> {}'.format(repr(default_settings), repr(settings_file)))
         copyfile(default_settings, settings_file)
 
     return settings_file
@@ -268,7 +269,9 @@ def download_examples(dir='.'):
     """Download redis_helper example files from github"""
     chdir(os.path.abspath(os.path.expanduser('.')))
     for filename in EXAMPLE_FILES:
+        print('saving {}'.format(repr(filename)))
         urllib.request.urlretrieve(EXAMPLE_URL_BASE + filename, filename)
+
 
 
 ADMIN_TIMEZONE = get_setting('admin_timezone')
