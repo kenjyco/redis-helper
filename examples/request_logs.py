@@ -13,7 +13,7 @@ request_logs = rh.Collection(
 
 
 def generate_request_log(add=True, show=False):
-    """Generate a request_log dict and return 2-item tuple (_id, data)
+    """Generate a request_log dict and return 2-item tuple (_id, request_log)
 
     - add: if True, automatically add the genarated request_log to 'request_logs'
     - show: if True, pprint the generated data to the screen
