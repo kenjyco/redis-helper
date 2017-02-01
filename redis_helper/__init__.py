@@ -42,6 +42,7 @@ _config.read(SETTINGS_FILE)
 EXAMPLE_URL_BASE = 'https://raw.githubusercontent.com/kenjyco/redis-helper/master/examples/'
 EXAMPLE_FILES = [
     'request_logs.py',
+    'urls.py',
 ]
 
 
