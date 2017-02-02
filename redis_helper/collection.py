@@ -379,7 +379,7 @@ class Collection(object):
                     timestamp, fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE
                 ),
                 'field': field,
-                'value': value,
+                'value': ih.decode(value),
             })
         results.sort(key=lambda x: (x['_ts_raw'], x['field']))
         return results
