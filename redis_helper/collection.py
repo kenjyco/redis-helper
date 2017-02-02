@@ -4,6 +4,7 @@ import redis_helper as rh
 import input_helper as ih
 from collections import defaultdict
 from functools import partial
+from itertools import chain
 from redis import ResponseError
 
 
@@ -252,17 +253,16 @@ class Collection(object):
 
     @property
     def keyspace(self):
-        """Show the Redis keyspace for self._base_key
+        """Show the Redis keyspace for self._base_key (excluding hash_ids)"""
+        keys_generator = chain(
+            rh.REDIS.scan_iter('{}:[^0-9]*'.format(self._base_key)),
+            rh.REDIS.scan_iter('{}:[0-9]*_changes'.format(self._base_key)),
+        )
 
-        If collection size is over 500 items, a message will be returned instead
-        """
-        if self.size <= 500:
-            return sorted([
-                (ih.decode(key), ih.decode(rh.REDIS.type(key)))
-                for key in rh.REDIS.scan_iter('{}*'.format(self._base_key))
-            ])
-        else:
-            return 'Keyspace is too large'
+        return sorted([
+            (ih.decode(key), ih.decode(rh.REDIS.type(key)))
+            for key in keys_generator
+        ])
 
     def clear_keyspace(self):
         """Delete all Redis keys under self._base_key"""
