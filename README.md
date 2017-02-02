@@ -1,14 +1,19 @@
 [rh pypi]: https://pypi.python.org/pypi/redis-helper
 [rh github]: https://github.com/kenjyco/redis-helper
-[settings]: https://github.com/kenjyco/redis-helper/blob/master/settings.ini
-[dev-setup]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
+[settings.ini]: https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini
+[dev-setup.bash]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
 [request_logs.py]: https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py
+[setup.cfg]: https://github.com/kenjyco/redis-helper/blob/master/setup.cfg
+[pdb++]: https://pypi.python.org/pypi/pdbpp/
+[debugging section]: https://github.com/kenjyco/redis-helper#settings-environments-testing-and-debugging
+[project code]: https://github.com/kenjyco/redis-helper/tree/master/redis_helper
+[test code]: https://github.com/kenjyco/redis-helper/tree/master/tests
 
 The first time that `redis_helper` is imported, the sample
-[settings.ini][settings] file will be copied to the `~/.config/redis-helper`
+[settings.ini][] file will be copied to the `~/.config/redis-helper`
 directory.
 
-## Install latest tag of [redis-helper from pypi][rh pypi]
+## Install latest tag/release of [redis-helper from pypi][rh pypi]
 
 ```
 % pip install redis-helper
@@ -25,29 +30,37 @@ directory.
 ```
 % git clone https://github.com/kenjyco/redis-helper
 % cd redis-helper
-% python3 setup.py test     # optional, requires 'setuptools'
 % ./dev-setup.bash
 ```
 
-The [dev-setup.bash][dev-setup] script will create a virtual environment in the
+The [dev-setup.bash][] script will create a virtual environment in the
 `./venv` directory with extra dependencies (ipython, pdbpp, pytest), then copy
 `settings.ini` to the `~/.config/redis-helper` directory.
 
 ## Running tests in development setup
 
+The [setup.cfg][] file contains the options for `py.test`, currently
+`-vsx -rs --pdb`.
+
+The `-vsx -rs --pdb` options will run tests in a verbose manner and output the
+reason why tests were skipped (if any were skipped). If there are any failing
+tests, `py.test` will stop on the first failure and drop you into a [pdb++][]
+debugger session.
+
+See the [debugging section][] of the README for tips on using the debugger and
+setting breakpoints (in the actual [project code][], or in the [test code][]).
+
 ```
-% venv/bin/py.test tests
+% venv/bin/py.test
 ```
 
 or
 
 ```
-% venv/bin/py.test -vsx -rs --pdb tests
+% venv/bin/python3 setup.py test
 ```
 
-The `py.test` options will run tests in a verbose manner and output the reason
-why tests were skipped (if any were skipped). If there are any failing tests,
-`py.test` will stop on the first failure and drop you into the debugger.
+> Note: This option requires `setuptools` to be installed.
 
 ## Usage
 
@@ -71,7 +84,18 @@ why tests were skipped (if any were skipped). If there are any failing tests,
 
 ## Basics - Part 1
 
-The first demo walks through the following
+[rh-basics-1]: https://asciinema.org/a/101422?autoplay=1
+[rh-basics-1 1:10]: https://asciinema.org/a/101422?t=1:10
+[rh-basics-1 10:33]: https://asciinema.org/a/101422?t=10:33
+
+Demo bookmarks:
+
+- [1:10][rh-basics-1 1:10] is when the `ipython` session is started with
+  `venv/bin/ipython -i request_logs.py`
+- [10:33][rh-basics-1 10:33] is an example of changing the `redis_helper.ADMIN_TIMEZONE` at
+  run time
+
+The [first demo][rh-basics-1] walks through the following:
 
 - creating a virtual environment, installing redis-helper, and downloading
   example files
@@ -84,7 +108,7 @@ The first demo walks through the following
     $ venv/bin/ipython -i request_logs.py
     ```
 - using the sample `Collection` defined in [request_logs.py][] to
-    - show values of properties on a `Collection`
+    - show values of some properties on a `Collection`
         - `redis_helper.Collection._base_key`
         - `redis_helper.Collection.now_pretty`
         - `redis_helper.Collection.now_utc_float`
@@ -92,7 +116,7 @@ The first demo walks through the following
         - `redis_helper.Collection.size`
         - `redis_helper.Collection.first`
         - `redis_helper.Collection.last`
-    - show values of settings from `redis_helper`
+    - show values of some settings from `redis_helper`
         - `redis_helper.APP_ENV`
         - `redis_helper.REDIS_URL`
         - `redis_helper.REDIS`
@@ -110,8 +134,8 @@ The first demo walks through the following
         - `redis_helper.Collection.find('index_field:value', all_fields=True, limit=2)`
         - `redis_helper.Collection.find('index_field:value', all_fields=True, limit=2, admin_fmt=True, item_format='{_ts} -> {_id}')`
         - `redis_helper.Collection.find('index_field:value', get_fields='field1,field2', include_meta=False)`
-        - `redis_helper.Collection.find('index_field2:value1, index_field2:value2', count=True)`
-        - `redis_helper.Collection.find('index_field2:value1, index_field2:value2', count=True, since='5:min, 1:min, 10:sec')`
+        - `redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True)`
+        - `redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True, since='5:min, 1:min, 10:sec')`
         - `redis_helper.Collection.get(hash_id)`
         - `redis_helper.Collection.get(hash_id, 'field1,field2,field3')`
         - `redis_helper.Collection.get(hash_id, include_meta=True)`
@@ -122,27 +146,16 @@ The first demo walks through the following
         - `redis_helper.Collection.update(hash_id, field1='value1', field2='value2')`
         - `redis_helper.Collection.old_data_for_hash_id(hash_id)`
 
-> Note: Jump to the [10:33 mark](https://asciinema.org/a/101422?t=10:33) to see
-> example of changing the `ADMIN_TIMEZONE` (in interpreter, instead of in
-> settings.ini)
-
-[![basics-1](https://asciinema.org/a/101422.png)](https://asciinema.org/a/101422?t=1:10)
-
 ## Settings, environments, testing, and debugging
 
-[pdb++]: https://pypi.python.org/pypi/pdbpp/
-
-When using `venv/bin/py.test -vsx -rs --pdb tests`, tests will stop running on
-the first failure and drop you into a [pdb++][] debugger session.
-
-To trigger a debugger session at a specific place in the code, insert the
-following, one line above where you want to inspect
+To trigger a debugger session at a specific place in the [project code][],
+insert the following, one line above where you want to inspect
 
 ```
 import pdb; pdb.set_trace()
 ```
 
-To start the debugger inside test code, use
+To start the debugger inside [test code][], use
 
 ```
 pytest.set_trace()

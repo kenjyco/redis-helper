@@ -1,9 +1,9 @@
 The first time that ``redis_helper`` is imported, the sample
-`settings.ini <https://github.com/kenjyco/redis-helper/blob/master/settings.ini>`__
+`settings.ini <https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini>`__
 file will be copied to the ``~/.config/redis-helper`` directory.
 
-Install latest tag of `redis-helper from pypi <https://pypi.python.org/pypi/redis-helper>`__
---------------------------------------------------------------------------------------------
+Install latest tag/release of `redis-helper from pypi <https://pypi.python.org/pypi/redis-helper>`__
+----------------------------------------------------------------------------------------------------
 
 ::
 
@@ -23,7 +23,6 @@ Local development setup
 
     % git clone https://github.com/kenjyco/redis-helper
     % cd redis-helper
-    % python3 setup.py test     # optional, requires 'setuptools'
     % ./dev-setup.bash
 
 The
@@ -35,20 +34,35 @@ with extra dependencies (ipython, pdbpp, pytest), then copy
 Running tests in development setup
 ----------------------------------
 
+The
+`setup.cfg <https://github.com/kenjyco/redis-helper/blob/master/setup.cfg>`__
+file contains the options for ``py.test``, currently ``-vsx -rs --pdb``.
+
+The ``-vsx -rs --pdb`` options will run tests in a verbose manner and
+output the reason why tests were skipped (if any were skipped). If there
+are any failing tests, ``py.test`` will stop on the first failure and
+drop you into a `pdb++ <https://pypi.python.org/pypi/pdbpp/>`__ debugger
+session.
+
+See the `debugging
+section <https://github.com/kenjyco/redis-helper#settings-environments-testing-and-debugging>`__
+of the README for tips on using the debugger and setting breakpoints (in
+the actual `project
+code <https://github.com/kenjyco/redis-helper/tree/master/redis_helper>`__,
+or in the `test
+code <https://github.com/kenjyco/redis-helper/tree/master/tests>`__).
+
 ::
 
-    % venv/bin/py.test tests
+    % venv/bin/py.test
 
 or
 
 ::
 
-    % venv/bin/py.test -vsx -rs --pdb tests
+    % venv/bin/python3 setup.py test
 
-The ``py.test`` options will run tests in a verbose manner and output
-the reason why tests were skipped (if any were skipped). If there are
-any failing tests, ``py.test`` will stop on the first failure and drop
-you into the debugger.
+    Note: This option requires ``setuptools`` to be installed.
 
 Usage
 -----
@@ -74,7 +88,16 @@ Usage
 Basics - Part 1
 ---------------
 
-The first demo walks through the following
+Demo bookmarks:
+
+-  `1:10 <https://asciinema.org/a/101422?t=1:10>`__ is when the
+   ``ipython`` session is started with
+   ``venv/bin/ipython -i request_logs.py``
+-  `10:33 <https://asciinema.org/a/101422?t=10:33>`__ is an example of
+   changing the ``redis_helper.ADMIN_TIMEZONE`` at run time
+
+The `first demo <https://asciinema.org/a/101422?autoplay=1>`__ walks
+through the following:
 
 -  creating a virtual environment, installing redis-helper, and
    downloading example files
@@ -91,7 +114,7 @@ The first demo walks through the following
    `request\_logs.py <https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py>`__
    to
 
-   -  show values of properties on a ``Collection``
+   -  show values of some properties on a ``Collection``
 
       -  ``redis_helper.Collection._base_key``
       -  ``redis_helper.Collection.now_pretty``
@@ -101,7 +124,7 @@ The first demo walks through the following
       -  ``redis_helper.Collection.first``
       -  ``redis_helper.Collection.last``
 
-   -  show values of settings from ``redis_helper``
+   -  show values of some settings from ``redis_helper``
 
       -  ``redis_helper.APP_ENV``
       -  ``redis_helper.REDIS_URL``
@@ -122,8 +145,8 @@ The first demo walks through the following
       -  ``redis_helper.Collection.find('index_field:value', all_fields=True, limit=2)``
       -  ``redis_helper.Collection.find('index_field:value', all_fields=True, limit=2, admin_fmt=True, item_format='{_ts} -> {_id}')``
       -  ``redis_helper.Collection.find('index_field:value', get_fields='field1,field2', include_meta=False)``
-      -  ``redis_helper.Collection.find('index_field2:value1, index_field2:value2', count=True)``
-      -  ``redis_helper.Collection.find('index_field2:value1, index_field2:value2', count=True, since='5:min, 1:min, 10:sec')``
+      -  ``redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True)``
+      -  ``redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True, since='5:min, 1:min, 10:sec')``
       -  ``redis_helper.Collection.get(hash_id)``
       -  ``redis_helper.Collection.get(hash_id, 'field1,field2,field3')``
       -  ``redis_helper.Collection.get(hash_id, include_meta=True)``
@@ -134,28 +157,19 @@ The first demo walks through the following
       -  ``redis_helper.Collection.update(hash_id, field1='value1', field2='value2')``
       -  ``redis_helper.Collection.old_data_for_hash_id(hash_id)``
 
-    Note: Jump to the `10:33
-    mark <https://asciinema.org/a/101422?t=10:33>`__ to see example of
-    changing the ``ADMIN_TIMEZONE`` (in interpreter, instead of in
-    settings.ini)
-
-|basics-1|
-
 Settings, environments, testing, and debugging
 ----------------------------------------------
 
-When using ``venv/bin/py.test -vsx -rs --pdb tests``, tests will stop
-running on the first failure and drop you into a
-`pdb++ <https://pypi.python.org/pypi/pdbpp/>`__ debugger session.
-
-To trigger a debugger session at a specific place in the code, insert
-the following, one line above where you want to inspect
+To trigger a debugger session at a specific place in the `project
+code <https://github.com/kenjyco/redis-helper/tree/master/redis_helper>`__,
+insert the following, one line above where you want to inspect
 
 ::
 
     import pdb; pdb.set_trace()
 
-To start the debugger inside test code, use
+To start the debugger inside `test
+code <https://github.com/kenjyco/redis-helper/tree/master/tests>`__, use
 
 ::
 
@@ -210,6 +224,3 @@ A `Redis hash <http://redis.io/commands#hash>`__ is most similar to a
 Python dictionary. A "key" in a Python dictionary is analogous to a
 "field" in a Redis hash (since "key" means something different in
 Redis).
-
-.. |basics-1| image:: https://asciinema.org/a/101422.png
-   :target: https://asciinema.org/a/101422?t=1:10
