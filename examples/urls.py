@@ -2,7 +2,12 @@ import redis_helper as rh
 from pprint import pprint
 
 
-urls = rh.Collection('web', 'url', unique_field='name', index_fields='domain,_type')
+urls = rh.Collection(
+    'web',
+    'url',
+    unique_field='name',
+    index_fields='domain,_type'
+)
 
 
 def add_urls():
