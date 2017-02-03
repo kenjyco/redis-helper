@@ -27,7 +27,7 @@ def generate_request_log(add=True, show=False):
 
     if request_log['method'] == 'get':
         request_log['querystring'] = '?x={}&y={}'.format(
-            random.randint(0,9),
+            random.randint(0, 9),
             random.randint(100, 999)
         )
 

@@ -274,7 +274,6 @@ def download_examples(dir='.'):
         urllib.request.urlretrieve(EXAMPLE_URL_BASE + filename, filename)
 
 
-
 ADMIN_TIMEZONE = get_setting('admin_timezone')
 ADMIN_DATE_FMT = get_setting('admin_date_fmt')
 REDIS_URL = get_setting('redis_url')
