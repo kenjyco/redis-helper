@@ -1,13 +1,29 @@
+[Redis]: http://redis.io/topics/data-types-intro
+[redis-py]: https://github.com/andymccurdy/redis-py
+[StrictRedis]: https://redis-py.readthedocs.org/en/latest/#redis.StrictRedis
+[dict]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[hash]: https://redis.io/topics/data-types#hashes
+[set]: https://redis.io/topics/data-types#sets
+[sorted set]: https://redis.io/topics/data-types#sorted-sets
+[hash commands]: http://redis.io/commands#hash
+[set commands]: https://redis.io/commands#set
+[sorted set commands]: https://redis.io/commands#sorted_set
 [rh pypi]: https://pypi.python.org/pypi/redis-helper
 [rh github]: https://github.com/kenjyco/redis-helper
 [settings.ini]: https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini
 [dev-setup.bash]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
 [request_logs.py]: https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py
 [setup.cfg]: https://github.com/kenjyco/redis-helper/blob/master/setup.cfg
+[ujson]: https://pypi.python.org/pypi/ujson
 [pdb++]: https://pypi.python.org/pypi/pdbpp/
 [debugging section]: https://github.com/kenjyco/redis-helper#settings-environments-testing-and-debugging
 [project code]: https://github.com/kenjyco/redis-helper/tree/master/redis_helper
 [test code]: https://github.com/kenjyco/redis-helper/tree/master/tests
+
+Use `redis_helper.Collection` to **define a data model in a
+single statement**. Then, use the `add`, `get`, `update`, `delete`,
+and `find` methods to power **real-time dashboards**, super-charge **event
+logging**, and speed up **information retrieval** across system components.
 
 The first time that `redis_helper` is imported, the sample
 [settings.ini][] file will be copied to the `~/.config/redis-helper`
@@ -23,6 +39,151 @@ directory.
 
 ```
 % pip install git+git://github.com/kenjyco/redis-helper
+```
+
+## Intro
+
+[Redis][] is a fast in-memory **data structure server**, where each stored
+object is referenced by a key name. Objects in Redis correspond to one of
+several basic types, each having their own set of specialized commands to
+perform operations. The [redis Python package][redis-py] provides the
+[StrictRedis][] class, which contains methods that correspond to all of the
+Redis server commands.
+
+When initializing Collection objects, you must specify the "namespace" and
+"name" of the collection (which are used to create the internally used
+`_base_key` property).  All Redis keys associated with a Collection will have a
+name pattern that starts with the `_base_key`.
+
+```python
+import redis_helper as rh
+
+
+request_logs = rh.Collection(
+    'log',
+    'request',
+    index_fields='status,uri,host',
+    json_fields='request,response,headers'
+)
+
+urls = rh.Collection(
+	'web',
+    'url',
+    unique_field='name',
+    index_fields='domain,_type'
+)
+```
+
+- a `unique_field` can be specified on a collection if items in the collection
+  should not contain duplicate values for that particular field
+    - if you specify a `unique_field`, that field must exist on each item you
+      add to the collection
+- use `index_fields` to specify which fields you will want to filter on when
+  using the `find` method
+    - the values for data fields being indexed MUST be simple strings or numbers
+    - the values for data fields being indexed SHOULD NOT be long strings, as
+      the values themselves are part of the index keys
+- use `json_fields` to specify which fields should be JSON encoded before
+  insertion to Redis (using the very fast [ujson][] library)
+- use `pickle_fields` to specify which fields should be pickled before insertion
+  to Redis
+
+Essentially, you can store a Python [dict][] in a Redis [hash][] and index some
+of the fields in Redis [sets][set]. The collection's `_ts_zset_key` is the Redis
+key name for the [sorted set][] containing the `hash_id` of every hash in the
+collection (with the `score` being a `utc_float` corresponding to the UTC time
+the `hash_id` was added or modified).
+
+```python
+request_logs.add(
+    method='get',
+    status=400,
+    host='blah.net',
+    uri='/info',
+    request={'x': 50, 'y': 100},
+    response={'error': 'bad request'},
+)
+
+urls.add(
+	name='redis-helper github',
+	url='https://github.com/kenjyco/redis-helper',
+	domain='github.com',
+	_type='repo',
+)
+```
+
+The `get` method is a wrapper to [hash commands][] `hget`, `hmget`, or
+`hgetall`. The actual hash command that gets called is determined by the number of
+fields requested.
+
+- a Python dict is typically returned from `get`
+- if `item_format` is specified, a string will be returned matching that format
+  instead
+
+```python
+request_logs.get('log:request:1')
+request_logs.get('log:request:1', 'host,status')
+request_logs.get('log:request:1', item_format='{status} for {host}{uri}')
+request_logs.get_by_position(0, item_format='{status} for {host}{uri}')
+urls.get_by_position(-1, 'domain,url')
+urls.get_by_unique_value('redis-helper github', item_format='{url} points to a {_type}')
+```
+
+- the `get_by_position` and `get_by_unique_value` methods are wrappers to `get`
+
+The `find` method allows you to return data for items in the collection that
+match some set of search criteria. Multiple search terms (i.e.
+`index_field:value` pairs) maybe be passed in the `terms` parameter, as long as they are
+separated by one of `,` `;` `|`. Any fields specified in the `get_fields`
+parameter are passed along to the `get` method (when the actual fetching takes
+place).
+
+- when using `terms`, all terms that include the same field will be treatead
+  like an "or" (union of related sets), then the intersection of different sets
+  will be computed
+- see the Redis [set commands][] and [sorted set commands][]
+
+There are many options for specifying time ranges in the `find` method
+including:
+
+- `since` and `until` when specifying `num:unit` strings (i.e. 15:seconds,
+  1.5:weeks, etc)
+- `start_ts` and `end_ts` when specifying timestamps with a form between `YYYY`
+  and `YYYY-MM-DD HH:MM:SS.f`
+- `start` and `end` when specifying a `utc_float`
+- for `since`, `until`, `start_ts`, and `end_ts`, multiple values may be passed
+  in the string, as long as they are separated by one of `,` `;` `|`.
+    - when multiple time ranges are specified, the `find` method will determine
+      all reasonable combinations and return a result-set per combination
+      (instead of returning a list of items, returns a dict of list of items)
+
+If `count=True` is specified, the number of results matching the search criteria
+are returned instead of the actual results
+
+- if there are multiple time ranges specified, counts will be returned for each
+  combination
+
+```python
+request_logs.find('status:400, host:blah.net', get_fields='uri,error')
+request_logs.find(since='1:hr, 30:min', until='15:min, 5:min')
+request_logs.find(count=True, since='1:hr, 30:min', until='15:min, 5:min')
+urls.find(count=True, since='1:hr, 30:min, 10:min, 5:min, 1:min')
+urls.find(start_ts='2017-02-03', end_ts='2017-02-03 7:15:00')
+urls.find(start_ts='2017-02-03', item_format='{_ts} -> {_id}')
+```
+
+The `update` method allows you to change values for some fields (modifying the
+`unique_field`, when it is specified, is not allowed).
+
+- every time a field is modified for a particular `hash_id`, the previous value
+  and score (timestamp) are stored in a Redis hash
+- the `old_data_for_hash_id` or `old_data_for_unique_value` methods can be used
+  to retrieve the history of all changes for a `hash_id`
+
+```python
+urls.update('web:url:1', _type='fancy', notes='this is a fancy url')
+urls.old_data_for_hash_id('web:url:1')
+urls.old_data_for_unique_value('redis-helper github'
 ```
 
 ## Local development setup
@@ -88,14 +249,14 @@ or
 [rh-basics-1 1:10]: https://asciinema.org/a/101422?t=1:10
 [rh-basics-1 10:33]: https://asciinema.org/a/101422?t=10:33
 
-Demo bookmarks:
+[Demo][rh-basics-1] bookmarks:
 
 - [1:10][rh-basics-1 1:10] is when the `ipython` session is started with
   `venv/bin/ipython -i request_logs.py`
 - [10:33][rh-basics-1 10:33] is an example of changing the `redis_helper.ADMIN_TIMEZONE` at
   run time
 
-The [first demo][rh-basics-1] walks through the following:
+The first demo walks through the following:
 
 - creating a virtual environment, installing redis-helper, and downloading
   example files
@@ -181,29 +342,3 @@ Use the `APP_ENV` environment variable to specify which section of the
 - if no `APP_ENV` is explicitly set, `dev` is assumed
 - the `APP_ENV` setting is overwritten to be `test` no matter what was set when
   calling `py.test` tests
-
-## Background
-
-[dict]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
-[hash]: http://redis.io/commands#hash
-[Redis]: http://redis.io/topics/data-types-intro
-[redis-py]: https://github.com/andymccurdy/redis-py
-[StrictRedis]: https://redis-py.readthedocs.org/en/latest/#redis.StrictRedis
-
-A [Python dictionary][dict] is a very useful **container** for grouping facts
-about some particular entity. Dictionaries have **keys** that map to
-**values** (so if we want to retrieve a particular value stored in a dictionary,
-we can access it through its key). The dictionary itself is accessed by its
-**variable name**.
-
-[Redis][] is a **data structure server** (among other things). It is great for
-storing various types of objects that can be accessed between different programs
-and processes. When your program stops running, objects that you have stored in
-Redis will remain. To retreive an object from Redis, you must access it through
-its **key name** (kind of like a Python variable name). The
-[redis Python package][redis-py] provides the [StrictRedis][] class, which
-contains methods that correspond to all of the Redis server commands.
-
-A [Redis hash][hash] is most similar to a Python dictionary. A "key" in a Python
-dictionary is analogous to a "field" in a Redis hash (since "key" means
-something different in Redis).
