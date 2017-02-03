@@ -258,16 +258,42 @@ Usage
     >>> top_indexed = collection.index_field_info()
     >>> collection.delete(hash_id, ...)
 
-Basics - Part 1
----------------
+Basics - Part 1 (request logging demo)
+--------------------------------------
 
 `Demo <https://asciinema.org/a/101422?autoplay=1>`__ bookmarks:
 
 -  `1:10 <https://asciinema.org/a/101422?t=1:10>`__ is when the
    ``ipython`` session is started with
    ``venv/bin/ipython -i request_logs.py``
--  `10:33 <https://asciinema.org/a/101422?t=10:33>`__ is an example of
-   changing the ``redis_helper.ADMIN_TIMEZONE`` at run time
+-  `3:14 <https://asciinema.org/a/101422?t=3:14>`__ is when a second
+   ``ipython`` session is started (in a separate tmux pane) to simulate
+   a steady stream of requests with
+   ``slow_trickle_requests(randomsleep=True, show=True)``
+-  `4:22 <https://asciinema.org/a/101422?t=4:22>`__ is when the
+   ``index_field_info`` method is used to get the latest counts of top
+   indexed items
+-  `6:11 <https://asciinema.org/a/101422?t=6:11>`__ is when
+   ``slow_trickle_requests(.001)`` is run to simulate a large quick
+   burst in traffic
+-  `7:00 <https://asciinema.org/a/101422?t=7:00>`__ is when multiple
+   values are passed in the ``since`` argument of ``find``...
+   ``request_logs.find(count=True, since='5:min, 1:min,   30:sec')``
+-  `8:37 <https://asciinema.org/a/101422?t=8:37>`__ is when ``get`` and
+   ``get_by_position`` methods are used with a variety of arguments to
+   change the structure of what's returned
+-  `10:33 <https://asciinema.org/a/101422?t=10:33>`__ is when the
+   ``redis_helper.ADMIN_TIMEZONE`` is changed at run time from
+   ``America/Chicago`` to ``Europe/London``
+-  `11:27 <https://asciinema.org/a/101422?t=11:27>`__ is when ``find``
+   is used with a variety of arguments to change the structure of what's
+   returned
+-  `14:30 <https://asciinema.org/a/101422?t=14:30>`__ is when ``find``
+   is used with multiple search terms and multiple ``since`` values...
+   ``request_logs.find('host:dogs.com,   uri:/breeds', count=True, since='5:min, 1:min, 10:sec')``
+-  `15:54 <https://asciinema.org/a/101422?t=15:54>`__ is when the
+   ``update`` method is used to modify data and change history is
+   retrieved with the ``old_data_for_hash_id`` method
 
 The first demo walks through the following:
 
@@ -328,6 +354,21 @@ The first demo walks through the following:
       -  ``redis_helper.Collection.get_by_position(0, include_meta=True, admin_fmt=True)``
       -  ``redis_helper.Collection.update(hash_id, field1='value1', field2='value2')``
       -  ``redis_helper.Collection.old_data_for_hash_id(hash_id)``
+
+Basics - Part 2 (urls demo, with unique field)
+----------------------------------------------
+
+`Demo <https://asciinema.org/a/101853?autoplay=1>`__ bookmarks:
+
+-  ``TODO``
+
+The second demo walks through the following:
+
+-  using the sample ``Collection`` defined in
+   `urls.py <https://github.com/kenjyco/redis-helper/blob/master/examples/urls.py>`__
+   to
+
+   -  ``TODO``
 
 Settings, environments, testing, and debugging
 ----------------------------------------------

@@ -13,6 +13,7 @@
 [settings.ini]: https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini
 [dev-setup.bash]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
 [request_logs.py]: https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py
+[urls.py]: https://github.com/kenjyco/redis-helper/blob/master/examples/urls.py
 [setup.cfg]: https://github.com/kenjyco/redis-helper/blob/master/setup.cfg
 [ujson]: https://pypi.python.org/pypi/ujson
 [pdb++]: https://pypi.python.org/pypi/pdbpp/
@@ -243,18 +244,45 @@ or
 >>> collection.delete(hash_id, ...)
 ```
 
-## Basics - Part 1
+## Basics - Part 1 (request logging demo)
 
 [rh-basics-1]: https://asciinema.org/a/101422?autoplay=1
 [rh-basics-1 1:10]: https://asciinema.org/a/101422?t=1:10
+[rh-basics-1 3:14]: https://asciinema.org/a/101422?t=3:14
+[rh-basics-1 4:22]: https://asciinema.org/a/101422?t=4:22
+[rh-basics-1 6:11]: https://asciinema.org/a/101422?t=6:11
+[rh-basics-1 7:00]: https://asciinema.org/a/101422?t=7:00
+[rh-basics-1 8:37]: https://asciinema.org/a/101422?t=8:37
 [rh-basics-1 10:33]: https://asciinema.org/a/101422?t=10:33
+[rh-basics-1 11:27]: https://asciinema.org/a/101422?t=11:27
+[rh-basics-1 14:30]: https://asciinema.org/a/101422?t=14:30
+[rh-basics-1 15:54]: https://asciinema.org/a/101422?t=15:54
 
 [Demo][rh-basics-1] bookmarks:
 
 - [1:10][rh-basics-1 1:10] is when the `ipython` session is started with
   `venv/bin/ipython -i request_logs.py`
-- [10:33][rh-basics-1 10:33] is an example of changing the `redis_helper.ADMIN_TIMEZONE` at
-  run time
+- [3:14][rh-basics-1 3:14] is when a second `ipython` session is started (in a
+  separate tmux pane) to simulate a steady stream of requests with
+  `slow_trickle_requests(randomsleep=True, show=True)`
+- [4:22][rh-basics-1 4:22] is when the `index_field_info` method is used to
+  get the latest counts of top indexed items
+- [6:11][rh-basics-1 6:11] is when `slow_trickle_requests(.001)` is run to
+  simulate a large quick burst in traffic
+- [7:00][rh-basics-1 7:00] is when multiple values are passed in the `since`
+  argument of `find`... `request_logs.find(count=True, since='5:min, 1:min,
+  30:sec')`
+- [8:37][rh-basics-1 8:37] is when `get` and `get_by_position` methods are used
+  with a variety of arguments to change the structure of what's returned
+- [10:33][rh-basics-1 10:33] is when the `redis_helper.ADMIN_TIMEZONE` is
+  changed at run time from `America/Chicago` to `Europe/London`
+- [11:27][rh-basics-1 11:27] is when `find` is used with a variety of arguments
+  to change the structure of what's returned
+- [14:30][rh-basics-1 14:30] is when `find` is used with multiple search terms
+  and multiple `since` values... `request_logs.find('host:dogs.com,
+  uri:/breeds', count=True, since='5:min, 1:min, 10:sec')`
+- [15:54][rh-basics-1 15:54] is when the `update` method is used to modify data
+  and change history is retrieved with the `old_data_for_hash_id` method
 
 The first demo walks through the following:
 
@@ -306,6 +334,19 @@ The first demo walks through the following:
         - `redis_helper.Collection.get_by_position(0, include_meta=True, admin_fmt=True)`
         - `redis_helper.Collection.update(hash_id, field1='value1', field2='value2')`
         - `redis_helper.Collection.old_data_for_hash_id(hash_id)`
+
+## Basics - Part 2 (urls demo, with unique field)
+
+[rh-basics-2]: https://asciinema.org/a/101853?autoplay=1
+
+[Demo][rh-basics-2] bookmarks:
+
+- `TODO`
+
+The second demo walks through the following:
+
+- using the sample `Collection` defined in [urls.py][] to
+    - `TODO`
 
 ## Settings, environments, testing, and debugging
 
