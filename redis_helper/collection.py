@@ -12,13 +12,15 @@ class Collection(object):
     """Store, index, and modify Python dicts in redis with flexible searching
     """
     def __init__(self, namespace, name, unique_field='', index_fields='',
-                 json_fields='', pickle_fields=''):
+                 json_fields='', pickle_fields='', insert_ts=False):
         """Pass in namespace and name
 
         - unique_field: name of the optional unique field
         - index_fields: string of fields that should be indexed
         - json_fields: string of fields that should be serialized as JSON
         - pickle_fields: string of fields with complex/arbitrary structure
+        - insert_ts: if True, automatically create a '_insert_ts' field with
+          current utc_float in data when `add` method is called
 
         Separate fields in strings by any of , ; |
         """
@@ -26,6 +28,7 @@ class Collection(object):
         index_fields_set = ih.string_to_set(index_fields)
         self._json_fields = ih.string_to_set(json_fields)
         self._pickle_fields = ih.string_to_set(pickle_fields)
+        self._insert_ts = insert_ts
 
         u = set([unique_field])
         invalid = (
@@ -57,6 +60,7 @@ class Collection(object):
             'index_fields={}'.format(repr(index_fields)) if index_fields else '',
             'json_fields={}'.format(repr(json_fields)) if json_fields else '',
             'pickle_fields={}'.format(repr(pickle_fields)) if pickle_fields else '',
+            'insert_ts={}'.format(repr(insert_ts)) if insert_ts else '',
         ]
         self._init_args = ''.join([
             self.__class__.__name__,
@@ -118,6 +122,8 @@ class Collection(object):
         if self._unique_field:
             pipe.zadd(self._id_zset_key, id_num, unique_val)
         pipe.zadd(self._ts_zset_key, now, key)
+        if self._insert_ts:
+            data['_insert_ts'] = now
         pipe.hmset(key, data)
         for index_field, base_key in self._index_base_keys.items():
             key_name = self._make_key(base_key, data.get(index_field))
