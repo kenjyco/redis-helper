@@ -267,7 +267,7 @@ def identity(x):
 
 
 def download_examples(dir='.'):
-    """Download redis_helper example files from github"""
+    """Download redis-helper example files from github"""
     chdir(os.path.abspath(os.path.expanduser('.')))
     for filename in EXAMPLE_FILES:
         print('saving {}'.format(repr(filename)))
