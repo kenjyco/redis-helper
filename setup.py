@@ -21,6 +21,7 @@ setup(
         'redis==2.10.5',
         'hiredis==0.2.0',
         'ujson==1.35',
+        'click==6.7',
         'pytz',
         'input-helper',
     ],
@@ -32,6 +33,7 @@ setup(
     entry_points={
         'console_scripts': [
             'rh-download-examples=redis_helper:download_examples',
+            'rh-notes=redis_helper.scripts.notes:main',
         ],
     },
     classifiers=[
