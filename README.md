@@ -21,10 +21,17 @@
 [project code]: https://github.com/kenjyco/redis-helper/tree/master/redis_helper
 [test code]: https://github.com/kenjyco/redis-helper/tree/master/tests
 
-Use `redis_helper.Collection` to **define a data model in a
-single statement**. Then, use the `add`, `get`, `update`, `delete`,
-and `find` methods to power **real-time dashboards**, super-charge **event
-logging**, and speed up **information retrieval** across system components.
+## About
+
+Create an instance of `redis_helper.Collection` and use the `add`, `get`,
+`update`, `delete`, and `find` methods to
+
+- quickly store/retrieve/modify Python dicts in Redis
+- filter through indexed fields with simple/flexible find arguments
+- power real-time dashboards with metrics at a variety of time ranges
+- super-charge event logging and system debugging
+- build FAST prototypes and simulators
+- greatly simplify data access patterns throughout application
 
 The first time that `redis_helper` is imported, the sample
 [settings.ini][] file will be copied to the `~/.config/redis-helper`
@@ -73,6 +80,13 @@ urls = rh.Collection(
     unique_field='name',
     index_fields='domain,_type'
 )
+
+notes = rh.Collection(
+    'input',
+    'note',
+    index_fields='topic,tag',
+    insert_ts=True
+)
 ```
 
 - a `unique_field` can be specified on a collection if items in the collection
@@ -88,6 +102,12 @@ urls = rh.Collection(
   insertion to Redis (using the very fast [ujson][] library)
 - use `pickle_fields` to specify which fields should be pickled before insertion
   to Redis
+- set `insert_ts=True` to permanently store the insert timestamp (`utc_float`)
+  on the data
+    - only do this if you are storing items that you are likely to update and
+      also likely to want to know the original insert time for an object
+        - each time an object is updated, the score associated with the
+          `hash_id` (at the `_ts_zset_key`) is updated to the current timestamp
 
 Essentially, you can store a Python [dict][] in a Redis [hash][] and index some
 of the fields in Redis [sets][set]. The collection's `_ts_zset_key` is the Redis

@@ -1,8 +1,15 @@
-Use ``redis_helper.Collection`` to **define a data model in a single
-statement**. Then, use the ``add``, ``get``, ``update``, ``delete``, and
-``find`` methods to power **real-time dashboards**, super-charge **event
-logging**, and speed up **information retrieval** across system
-components.
+About
+-----
+
+Create an instance of ``redis_helper.Collection`` and use the ``add``,
+``get``, ``update``, ``delete``, and ``find`` methods to
+
+-  quickly store/retrieve/modify Python dicts in Redis
+-  filter through indexed fields with simple/flexible find arguments
+-  power real-time dashboards with metrics at a variety of time ranges
+-  super-charge event logging and system debugging
+-  build FAST prototypes and simulators
+-  greatly simplify data access patterns throughout application
 
 The first time that ``redis_helper`` is imported, the sample
 `settings.ini <https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini>`__
@@ -59,6 +66,13 @@ Collection will have a name pattern that starts with the ``_base_key``.
         index_fields='domain,_type'
     )
 
+    notes = rh.Collection(
+        'input',
+        'note',
+        index_fields='topic,tag',
+        insert_ts=True
+    )
+
 -  a ``unique_field`` can be specified on a collection if items in the
    collection should not contain duplicate values for that particular
    field
@@ -79,6 +93,16 @@ Collection will have a name pattern that starts with the ``_base_key``.
    `ujson <https://pypi.python.org/pypi/ujson>`__ library)
 -  use ``pickle_fields`` to specify which fields should be pickled
    before insertion to Redis
+-  set ``insert_ts=True`` to permanently store the insert timestamp
+   (``utc_float``) on the data
+
+   -  only do this if you are storing items that you are likely to
+      update and also likely to want to know the original insert time
+      for an object
+
+      -  each time an object is updated, the score associated with the
+         ``hash_id`` (at the ``_ts_zset_key``) is updated to the current
+         timestamp
 
 Essentially, you can store a Python
 `dict <https://docs.python.org/3/tutorial/datastructures.html#dictionaries>`__
