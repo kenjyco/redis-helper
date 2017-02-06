@@ -1,8 +1,24 @@
 About
 -----
 
-Create an instance of ``redis_helper.Collection`` and use the ``add``,
-``get``, ``update``, ``delete``, and ``find`` methods to
+The `redis-helper project <https://github.com/kenjyco/redis-helper>`__
+was created as a refence Python project that would be **easy to teach**
+and follow many practical best practices and useful patterns. Main
+purpose was to have something that was super **easy to configure** (a
+single ``~/.config/redis-helper/settings.ini`` file for multiple
+application environments) that did cool things with
+`Redis <http://redis.io/topics/data-types-intro>`__.
+
+The `redis-helper package <https://pypi.python.org/pypi/redis-helper>`__
+provides a ``Collection`` class that was designed to be **easy to
+interact with** in the shell (for exploration, experimentation, and
+debugging). Most methods on a ``Collection`` help **minimize typing**
+(passing multiple arguments in a single delimited string when
+appropriate) and do "the most reasonable thing" whenever possible.
+
+Install redis-helper, then create an instance of
+``redis_helper.Collection`` and use the ``add``, ``get``, ``update``,
+``delete``, and ``find`` methods to
 
 -  quickly store/retrieve/modify Python dicts in Redis
 -  filter through indexed fields with simple/flexible find arguments
@@ -15,15 +31,15 @@ The first time that ``redis_helper`` is imported, the sample
 `settings.ini <https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini>`__
 file will be copied to the ``~/.config/redis-helper`` directory.
 
-Install latest tag/release of `redis-helper from pypi <https://pypi.python.org/pypi/redis-helper>`__
-----------------------------------------------------------------------------------------------------
+Install latest tag/release of `redis-helper package <https://pypi.python.org/pypi/redis-helper>`__
+--------------------------------------------------------------------------------------------------
 
 ::
 
     % pip install redis-helper
 
-Install latest commit on master of `redis-helper from github <https://github.com/kenjyco/redis-helper>`__
----------------------------------------------------------------------------------------------------------
+Install latest commit on master of `redis-helper project <https://github.com/kenjyco/redis-helper>`__
+-----------------------------------------------------------------------------------------------------
 
 ::
 
@@ -93,16 +109,17 @@ Collection will have a name pattern that starts with the ``_base_key``.
    `ujson <https://pypi.python.org/pypi/ujson>`__ library)
 -  use ``pickle_fields`` to specify which fields should be pickled
    before insertion to Redis
--  set ``insert_ts=True`` to permanently store the insert timestamp
-   (``utc_float``) on the data
+-  set ``insert_ts=True`` to create an additional index to store insert
+   times
 
    -  only do this if you are storing items that you are likely to
       update and also likely to want to know the original insert time
-      for an object
 
       -  each time an object is updated, the score associated with the
          ``hash_id`` (at the ``_ts_zset_key``) is updated to the current
          timestamp
+      -  the score associated with the ``hash_id`` (at the
+         ``_in_zset_key``) is never updated
 
 Essentially, you can store a Python
 `dict <https://docs.python.org/3/tutorial/datastructures.html#dictionaries>`__
@@ -114,6 +131,11 @@ set <https://redis.io/topics/data-types#sorted-sets>`__ containing the
 ``hash_id`` of every hash in the collection (with the ``score`` being a
 ``utc_float`` corresponding to the UTC time the ``hash_id`` was added or
 modified).
+
+-  if ``insert_ts=True`` was passed in when initializing the
+   ``Collection`` (or sub-class), then the collection will also define
+   ``self.in_zset_key`` to be the Redis key name for the sorted set (for
+   ``hash_id`` and ``utc_float`` of insert time)
 
 .. code:: python
 

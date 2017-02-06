@@ -8,8 +8,8 @@
 [hash commands]: http://redis.io/commands#hash
 [set commands]: https://redis.io/commands#set
 [sorted set commands]: https://redis.io/commands#sorted_set
-[rh pypi]: https://pypi.python.org/pypi/redis-helper
-[rh github]: https://github.com/kenjyco/redis-helper
+[redis-helper package]: https://pypi.python.org/pypi/redis-helper
+[redis-helper project]: https://github.com/kenjyco/redis-helper
 [settings.ini]: https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini
 [dev-setup.bash]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
 [request_logs.py]: https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py
@@ -23,8 +23,20 @@
 
 ## About
 
-Create an instance of `redis_helper.Collection` and use the `add`, `get`,
-`update`, `delete`, and `find` methods to
+The [redis-helper project][] was created as a refence Python project that would
+be **easy to teach** and follow many practical best practices and useful
+patterns.  Main purpose was to have something that was super **easy to
+configure** (a single `~/.config/redis-helper/settings.ini` file for multiple
+application environments) that did cool things with [Redis][].
+
+The [redis-helper package][] provides a `Collection` class that was designed to
+be **easy to interact with** in the shell (for exploration, experimentation, and
+debugging). Most methods on a `Collection` help **minimize typing** (passing
+multiple arguments in a single delimited string when appropriate) and do "the
+most reasonable thing" whenever possible.
+
+Install redis-helper, then create an instance of `redis_helper.Collection` and
+use the `add`, `get`, `update`, `delete`, and `find` methods to
 
 - quickly store/retrieve/modify Python dicts in Redis
 - filter through indexed fields with simple/flexible find arguments
@@ -37,13 +49,13 @@ The first time that `redis_helper` is imported, the sample
 [settings.ini][] file will be copied to the `~/.config/redis-helper`
 directory.
 
-## Install latest tag/release of [redis-helper from pypi][rh pypi]
+## Install latest tag/release of [redis-helper package][]
 
 ```
 % pip install redis-helper
 ```
 
-## Install latest commit on master of [redis-helper from github][rh github]
+## Install latest commit on master of [redis-helper project][]
 
 ```
 % pip install git+git://github.com/kenjyco/redis-helper
@@ -60,7 +72,7 @@ Redis server commands.
 
 When initializing Collection objects, you must specify the "namespace" and
 "name" of the collection (which are used to create the internally used
-`_base_key` property).  All Redis keys associated with a Collection will have a
+`_base_key` property). All Redis keys associated with a Collection will have a
 name pattern that starts with the `_base_key`.
 
 ```python
