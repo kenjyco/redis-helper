@@ -21,7 +21,7 @@ setup(
         'redis==2.10.5',
         'hiredis==0.2.0',
         'ujson==1.35',
-        'click==6.7',
+        'click=>6.0',
         'pytz',
         'input-helper',
     ],
