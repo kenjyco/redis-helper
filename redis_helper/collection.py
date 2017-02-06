@@ -1,5 +1,6 @@
 import pickle
 import ujson
+import random
 import redis_helper as rh
 import input_helper as ih
 from collections import defaultdict
@@ -233,6 +234,10 @@ class Collection(object):
             hash_id, ts = x[0]
             data = self.get(hash_id, **kwargs)
         return data
+
+    def random(self, **kwargs):
+        """Wrapper to self.get via self.get_by_position"""
+        return self.get_by_position(random.randint(0, self.size), **kwargs)
 
     @property
     def last(self):
