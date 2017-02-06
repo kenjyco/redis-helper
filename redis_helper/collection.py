@@ -237,6 +237,26 @@ class Collection(object):
         """Wrapper to self.get via self.get_by_position"""
         return self.get_by_position(random.randint(0, self.size), **kwargs)
 
+    @classmethod
+    def select_model(cls):
+        """A class method to select previously created model instance"""
+        items = [
+            {
+                'name': ih.decode(name),
+                'count': ih.decode(count)
+            }
+            for name, count in rh.REDIS.hgetall(cls.__name__).items()
+        ]
+        items.sort(key=lambda x: x['count'], reverse=True)
+        selected = ih.make_selections(
+            items,
+            prompt='Select the model to be returned',
+            item_format='({count} instances) {name}',
+            wrap=False
+        )
+        if selected:
+            return eval('rh.{}'.format(selected[0]['name']))
+
     @property
     def last(self):
         """Return the last item in the collection"""
