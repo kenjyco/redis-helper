@@ -19,8 +19,7 @@ class Collection(object):
         - index_fields: string of fields that should be indexed
         - json_fields: string of fields that should be serialized as JSON
         - pickle_fields: string of fields with complex/arbitrary structure
-        - insert_ts: if True, automatically create a '_insert_ts' field with
-          current utc_float in data when `add` method is called
+        - insert_ts: if True, use an additional index for insert times
 
         Separate fields in strings by any of , ; |
         """
@@ -49,6 +48,7 @@ class Collection(object):
         self._next_id_string_key = self._make_key(self._base_key, '_next_id')
         self._ts_zset_key = self._make_key(self._base_key, '_ts')
         self._id_zset_key = self._make_key(self._base_key, '_id')
+        self._in_zset_key = self._make_key(self._base_key, '_in')
         self._find_base_key = self._make_key(self._base_key, '_find')
         self._find_next_id_string_key = self._make_key(self._find_base_key, '_next_id')
         self._find_stats_hash_key = self._make_key(self._find_base_key, '_stats')
@@ -123,7 +123,7 @@ class Collection(object):
             pipe.zadd(self._id_zset_key, id_num, unique_val)
         pipe.zadd(self._ts_zset_key, now, key)
         if self._insert_ts:
-            data['_insert_ts'] = now
+            pipe.zadd(self._in_zset_key, now, key)
         pipe.hmset(key, data)
         for index_field, base_key in self._index_base_keys.items():
             key_name = self._make_key(base_key, data.get(index_field))

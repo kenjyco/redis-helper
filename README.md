@@ -102,18 +102,24 @@ notes = rh.Collection(
   insertion to Redis (using the very fast [ujson][] library)
 - use `pickle_fields` to specify which fields should be pickled before insertion
   to Redis
-- set `insert_ts=True` to permanently store the insert timestamp (`utc_float`)
-  on the data
+- set `insert_ts=True` to create an additional index to store insert times
     - only do this if you are storing items that you are likely to update and
-      also likely to want to know the original insert time for an object
+      also likely to want to know the original insert time
         - each time an object is updated, the score associated with the
           `hash_id` (at the `_ts_zset_key`) is updated to the current timestamp
+        - the score associated with the `hash_id` (at the `_in_zset_key`) is
+          never updated
 
 Essentially, you can store a Python [dict][] in a Redis [hash][] and index some
 of the fields in Redis [sets][set]. The collection's `_ts_zset_key` is the Redis
 key name for the [sorted set][] containing the `hash_id` of every hash in the
 collection (with the `score` being a `utc_float` corresponding to the UTC time
 the `hash_id` was added or modified).
+
+- if `insert_ts=True` was passed in when initializing the `Collection` (or
+  sub-class), then the collection will also define `self.in_zset_key` to be the
+  Redis key name for the sorted set (for `hash_id` and `utc_float` of insert
+  time)
 
 ```python
 request_logs.add(
