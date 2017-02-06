@@ -227,8 +227,6 @@ class Collection(object):
     def get_by_position(self, pos, **kwargs):
         """Wrapper to self.get"""
         data = {}
-        if not kwargs:
-            kwargs['include_meta'] = True
         x = rh.REDIS.zrange(self._ts_zset_key, pos, pos, withscores=True)
         if x:
             hash_id, ts = x[0]
