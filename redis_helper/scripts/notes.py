@@ -18,6 +18,7 @@ notes = rh.Collection(
 )
 @click.argument('topic', nargs=1, default='')
 def main(ch, topic):
+    """Prompt user to enter notes (about a topic) until finished"""
     print('\nPress <Enter> twice to stop prompting.\n')
     while True:
         text = ih.user_input(topic, ch)
