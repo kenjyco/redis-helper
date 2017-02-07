@@ -34,6 +34,7 @@ setup(
         'console_scripts': [
             'rh-download-examples=redis_helper:download_examples',
             'rh-notes=redis_helper.scripts.notes:main',
+            'rh-shell=redis_helper.scripts.shell:main',
         ],
     },
     classifiers=[
