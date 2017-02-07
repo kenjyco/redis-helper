@@ -377,7 +377,7 @@ The first demo walks through the following:
 
 ## Basics - Part 2 (urls demo, with unique field)
 
-[rh-basics-2]: https://asciinema.org/a/101853?autoplay=1
+[rh-basics-2]: https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?autoplay=1
 
 [Demo][rh-basics-2] bookmarks:
 

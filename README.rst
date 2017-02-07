@@ -176,6 +176,9 @@ the number of fields requested.
 -  the ``get_by_position`` and ``get_by_unique_value`` methods are
    wrappers to ``get``
 
+   -  the ``get_by_unique_value`` method is only useful if a
+      ``unique_field`` was set on the Collection
+
 The ``find`` method allows you to return data for items in the
 collection that match some set of search criteria. Multiple search terms
 (i.e. ``index_field:value`` pairs) maybe be passed in the ``terms``
@@ -404,7 +407,8 @@ The first demo walks through the following:
 Basics - Part 2 (urls demo, with unique field)
 ----------------------------------------------
 
-`Demo <https://asciinema.org/a/101853?autoplay=1>`__ bookmarks:
+`Demo <https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?autoplay=1>`__
+bookmarks:
 
 -  ``TODO``
 
