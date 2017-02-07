@@ -169,6 +169,8 @@ urls.get_by_unique_value('redis-helper github', item_format='{url} points to a {
 ```
 
 - the `get_by_position` and `get_by_unique_value` methods are wrappers to `get`
+    - the `get_by_unique_value` method is only useful if a `unique_field` was
+      set on the Collection
 
 The `find` method allows you to return data for items in the collection that
 match some set of search criteria. Multiple search terms (i.e.
