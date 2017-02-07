@@ -2,9 +2,8 @@ import configparser
 import os.path
 import textwrap
 import pytz
-import urllib.request
 import input_helper as ih
-from os import getenv, makedirs, chdir
+from os import getenv, makedirs
 from shutil import copyfile
 from datetime import datetime, timedelta, timezone as dt_timezone
 from functools import partial
@@ -44,11 +43,6 @@ APP_ENV = getenv('APP_ENV', 'dev')
 FLOAT_STRING_FMT = '%Y%m%d%H%M%S.%f'
 _config = configparser.RawConfigParser()
 _config.read(SETTINGS_FILE)
-EXAMPLE_URL_BASE = 'https://raw.githubusercontent.com/kenjyco/redis-helper/master/examples/'
-EXAMPLE_FILES = [
-    'request_logs.py',
-    'urls.py',
-]
 
 
 def get_setting(name, default='', section=APP_ENV):
@@ -269,14 +263,6 @@ def zshow(key, start=0, end=-1, desc=True, withscores=True):
 def identity(x):
     """Return x, unmodified"""
     return x
-
-
-def download_examples(dir='.'):
-    """Download redis-helper example files from github"""
-    chdir(os.path.abspath(os.path.expanduser('.')))
-    for filename in EXAMPLE_FILES:
-        print('saving {}'.format(repr(filename)))
-        urllib.request.urlretrieve(EXAMPLE_URL_BASE + filename, filename)
 
 
 ADMIN_TIMEZONE = get_setting('admin_timezone')
