@@ -243,7 +243,7 @@ class Collection(object):
         items = [
             {
                 'name': ih.decode(name),
-                'count': ih.decode(count)
+                'count': ih.from_string(ih.decode(count))
             }
             for name, count in rh.REDIS.hgetall(cls.__name__).items()
         ]
