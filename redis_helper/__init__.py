@@ -14,7 +14,12 @@ from redis import StrictRedis
 
 __doc__ = """Easily store, index, and modify Python dicts in Redis (with flexible searching)
 
-Use `Collection` to get a client for each of your models.
+Create an instance of `redis_helper.Collection` and use the 'add', 'get',
+'update', 'delete', and 'find' methods to
+
+- quickly store/retrieve/modify Python dicts in Redis
+- filter through indexed fields with simple/flexible find arguments
+- gather count metrics or actual data at a variety of time ranges at once
 """
 
 
