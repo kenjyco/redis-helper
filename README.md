@@ -1,31 +1,17 @@
-[Redis]: http://redis.io/topics/data-types-intro
-[redis-py]: https://github.com/andymccurdy/redis-py
-[StrictRedis]: https://redis-py.readthedocs.org/en/latest/#redis.StrictRedis
-[dict]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
-[hash]: https://redis.io/topics/data-types#hashes
-[set]: https://redis.io/topics/data-types#sets
-[sorted set]: https://redis.io/topics/data-types#sorted-sets
-[hash commands]: http://redis.io/commands#hash
-[set commands]: https://redis.io/commands#set
-[sorted set commands]: https://redis.io/commands#sorted_set
-[redis-helper package]: https://pypi.python.org/pypi/redis-helper
-[redis-helper project]: https://github.com/kenjyco/redis-helper
-[settings.ini]: https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini
-[dev-setup.bash]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
-[request_logs.py]: https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py
-[urls.py]: https://github.com/kenjyco/redis-helper/blob/master/examples/urls.py
-[setup.cfg]: https://github.com/kenjyco/redis-helper/blob/master/setup.cfg
-[ujson]: https://pypi.python.org/pypi/ujson
-[pdb++]: https://pypi.python.org/pypi/pdbpp/
-[debugging section]: https://github.com/kenjyco/redis-helper#settings-environments-testing-and-debugging
-[project code]: https://github.com/kenjyco/redis-helper/tree/master/redis_helper
-[test code]: https://github.com/kenjyco/redis-helper/tree/master/tests
-
 ## About
 
-The [redis-helper project][] was created as a refence Python project that would
-be **easy to teach** and follow many practical best practices and useful
-patterns.  Main purpose was to have something that was super **easy to
+[redis-helper project]: https://github.com/kenjyco/redis-helper
+[beu-fork]: https://github.com/kenjyco/beu/tree/4aea6146fc5f01df3e344b9fadddf28b795dac89
+[Redis]: http://redis.io/topics/data-types-intro
+[redis-helper package]: https://pypi.python.org/pypi/redis-helper
+[request logging demo]: https://asciinema.org/a/101422?t=1:10
+[urls demo]: https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00
+[examples]: https://github.com/kenjyco/redis-helper/tree/master/examples
+[settings.ini]: https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini
+
+The [redis-helper project][] evolved from a [reference Python project][beu-fork]
+that would be **easy to teach** and follow many practical best practices and
+useful patterns.  Main purpose was to have something that was super **easy to
 configure** (a single `~/.config/redis-helper/settings.ini` file for multiple
 application environments) that did cool things with [Redis][].
 
@@ -35,8 +21,9 @@ debugging). Most methods on a `Collection` help **minimize typing** (passing
 multiple arguments in a single delimited string when appropriate) and do "the
 most reasonable thing" whenever possible.
 
-Install redis-helper, then create an instance of `redis_helper.Collection` and
-use the `add`, `get`, `update`, `delete`, and `find` methods to
+Install redis-helper, create an instance of `redis_helper.Collection`
+(**`__init__` args/kwargs define the model**) and use the `add`, `get`, `update`,
+`delete`, and `find` methods to:
 
 - quickly store/retrieve/modify Python dicts in Redis
 - filter through indexed fields with simple/flexible find arguments
@@ -44,6 +31,10 @@ use the `add`, `get`, `update`, `delete`, and `find` methods to
 - super-charge event logging and system debugging
 - build FAST prototypes and simulators
 - greatly simplify data access patterns throughout application
+
+See the [request logging demo][] and [urls demo][] (with `unique_field`
+defined). The [examples][] they reference are **short** and **easy to
+read**.
 
 The first time that `redis_helper` is imported, the sample
 [settings.ini][] file will be copied to the `~/.config/redis-helper`
@@ -62,6 +53,17 @@ directory.
 ```
 
 ## Intro
+
+[redis-py]: https://github.com/andymccurdy/redis-py
+[StrictRedis]: https://redis-py.readthedocs.org/en/latest/#redis.StrictRedis
+[ujson]: https://pypi.python.org/pypi/ujson
+[dict]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[hash]: https://redis.io/topics/data-types#hashes
+[set]: https://redis.io/topics/data-types#sets
+[sorted set]: https://redis.io/topics/data-types#sorted-sets
+[hash commands]: http://redis.io/commands#hash
+[set commands]: https://redis.io/commands#set
+[sorted set commands]: https://redis.io/commands#sorted_set
 
 [Redis][] is a fast in-memory **data structure server**, where each stored
 object is referenced by a key name. Objects in Redis correspond to one of
@@ -229,6 +231,8 @@ urls.old_data_for_unique_value('redis-helper github'
 
 ## Local development setup
 
+[dev-setup.bash]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
+
 ```
 % git clone https://github.com/kenjyco/redis-helper
 % cd redis-helper
@@ -240,6 +244,12 @@ The [dev-setup.bash][] script will create a virtual environment in the
 `settings.ini` to the `~/.config/redis-helper` directory.
 
 ## Running tests in development setup
+
+[setup.cfg]: https://github.com/kenjyco/redis-helper/blob/master/setup.cfg
+[pdb++]: https://pypi.python.org/pypi/pdbpp/
+[debugging section]: https://github.com/kenjyco/redis-helper#settings-environments-testing-and-debugging
+[project code]: https://github.com/kenjyco/redis-helper/tree/master/redis_helper
+[test code]: https://github.com/kenjyco/redis-helper/tree/master/tests
 
 The [setup.cfg][] file contains the options for `py.test`, currently
 `-vsx -rs --pdb`.
@@ -286,7 +296,6 @@ or
 
 ## Basics - Part 1 (request logging demo)
 
-[rh-basics-1]: https://asciinema.org/a/101422?autoplay=1
 [rh-basics-1 1:10]: https://asciinema.org/a/101422?t=1:10
 [rh-basics-1 3:14]: https://asciinema.org/a/101422?t=3:14
 [rh-basics-1 4:22]: https://asciinema.org/a/101422?t=4:22
@@ -297,8 +306,9 @@ or
 [rh-basics-1 11:27]: https://asciinema.org/a/101422?t=11:27
 [rh-basics-1 14:30]: https://asciinema.org/a/101422?t=14:30
 [rh-basics-1 15:54]: https://asciinema.org/a/101422?t=15:54
+[request_logs.py]: https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py
 
-[Demo][rh-basics-1] bookmarks:
+[Demo][request logging demo] bookmarks:
 
 - [1:10][rh-basics-1 1:10] is when the `ipython` session is started with
   `venv/bin/ipython -i request_logs.py`
@@ -377,9 +387,9 @@ The first demo walks through the following:
 
 ## Basics - Part 2 (urls demo, with unique field)
 
-[rh-basics-2]: https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?autoplay=1
+[urls.py]: https://github.com/kenjyco/redis-helper/blob/master/examples/urls.py
 
-[Demo][rh-basics-2] bookmarks:
+[Demo][urls demo] bookmarks:
 
 - `TODO`
 

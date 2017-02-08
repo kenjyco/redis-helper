@@ -2,11 +2,12 @@ About
 -----
 
 The `redis-helper project <https://github.com/kenjyco/redis-helper>`__
-was created as a refence Python project that would be **easy to teach**
-and follow many practical best practices and useful patterns. Main
-purpose was to have something that was super **easy to configure** (a
-single ``~/.config/redis-helper/settings.ini`` file for multiple
-application environments) that did cool things with
+evolved from a `reference Python
+project <https://github.com/kenjyco/beu/tree/4aea6146fc5f01df3e344b9fadddf28b795dac89>`__
+that would be **easy to teach** and follow many practical best practices
+and useful patterns. Main purpose was to have something that was super
+**easy to configure** (a single ``~/.config/redis-helper/settings.ini``
+file for multiple application environments) that did cool things with
 `Redis <http://redis.io/topics/data-types-intro>`__.
 
 The `redis-helper package <https://pypi.python.org/pypi/redis-helper>`__
@@ -16,9 +17,9 @@ debugging). Most methods on a ``Collection`` help **minimize typing**
 (passing multiple arguments in a single delimited string when
 appropriate) and do "the most reasonable thing" whenever possible.
 
-Install redis-helper, then create an instance of
-``redis_helper.Collection`` and use the ``add``, ``get``, ``update``,
-``delete``, and ``find`` methods to
+Install redis-helper, create an instance of ``redis_helper.Collection``
+(**``__init__`` args/kwargs define the model**) and use the ``add``,
+``get``, ``update``, ``delete``, and ``find`` methods to:
 
 -  quickly store/retrieve/modify Python dicts in Redis
 -  filter through indexed fields with simple/flexible find arguments
@@ -26,6 +27,13 @@ Install redis-helper, then create an instance of
 -  super-charge event logging and system debugging
 -  build FAST prototypes and simulators
 -  greatly simplify data access patterns throughout application
+
+See the `request logging demo <https://asciinema.org/a/101422?t=1:10>`__
+and `urls
+demo <https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00>`__ (with
+``unique_field`` defined). The
+`examples <https://github.com/kenjyco/redis-helper/tree/master/examples>`__
+they reference are **short** and **easy to read**.
 
 The first time that ``redis_helper`` is imported, the sample
 `settings.ini <https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini>`__
@@ -310,7 +318,7 @@ Usage
 Basics - Part 1 (request logging demo)
 --------------------------------------
 
-`Demo <https://asciinema.org/a/101422?autoplay=1>`__ bookmarks:
+`Demo <https://asciinema.org/a/101422?t=1:10>`__ bookmarks:
 
 -  `1:10 <https://asciinema.org/a/101422?t=1:10>`__ is when the
    ``ipython`` session is started with
@@ -407,7 +415,7 @@ The first demo walks through the following:
 Basics - Part 2 (urls demo, with unique field)
 ----------------------------------------------
 
-`Demo <https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?autoplay=1>`__
+`Demo <https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00>`__
 bookmarks:
 
 -  ``TODO``
