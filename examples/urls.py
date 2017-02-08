@@ -1,3 +1,5 @@
+# Demo: https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00
+
 import redis_helper as rh
 from pprint import pprint
 

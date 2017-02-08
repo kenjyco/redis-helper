@@ -1,3 +1,5 @@
+# Demo: https://asciinema.org/a/101422?t=1:10
+
 import redis_helper as rh
 import random
 import time
