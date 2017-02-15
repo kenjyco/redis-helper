@@ -1,6 +1,7 @@
 import click
 import input_helper as ih
 import redis_helper as rh
+from input_helper import matcher
 
 
 notes = rh.Collection(

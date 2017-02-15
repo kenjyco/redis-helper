@@ -7,9 +7,13 @@ def main():
     from IPython import embed
     import redis_helper as rh
     import input_helper as ih
+    from input_helper import matcher
     model = rh.Collection.select_model()
-    print('\nmodel={}\n'.format(repr(model)))
-    print('import redis_helper as rh\nimport input_helper as ih\n\n')
+    print(
+        '\nimport redis_helper as rh\nimport input_helper as ih\n'
+        'from input_helper import matcher\n'
+    )
+    print('model=rh.{}\n\n'.format(repr(model)))
     embed()
 
 
