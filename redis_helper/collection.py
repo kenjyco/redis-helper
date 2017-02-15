@@ -140,7 +140,7 @@ class Collection(object):
 
     def get(self, hash_id, fields='', include_meta=False,
             timestamp_formatter=rh.identity, ts_fmt=None, ts_tz=None,
-            admin_fmt=False, item_format=''):
+            admin_fmt=False, item_format='', insert_ts=False):
         """Wrapper to rh.REDIS.hget/hmget/hgetall
 
         - fields: string of field names to get separated by any of , ; |
@@ -151,6 +151,8 @@ class Collection(object):
         - admin_fmt: if True, use format and timezone defined in settings file
         - item_format: format string for each item (return a string instead of
           a dict)
+        - insert_ts: if True and include_meta is True, return the insert time
+          for the '_ts' meta field (instead of modify time)
         """
         if item_format:
             # Ensure that all fields specified in item_format are fetched
@@ -192,9 +194,10 @@ class Collection(object):
                 val = ih.decode(data[field])
                 data[field] = ih.from_string(val) if val is not None else None
         if include_meta:
+            key = self._ts_zset_key if not insert_ts else self._in_zset_key
             data['_id'] = ih.decode(hash_id)
             data['_ts'] = timestamp_formatter(
-                rh.REDIS.zscore(self._ts_zset_key, hash_id)
+                rh.REDIS.zscore(key, hash_id)
             )
         if item_format:
             return item_format.format(**data)
@@ -237,9 +240,13 @@ class Collection(object):
         return data
 
     def get_by_position(self, pos, **kwargs):
-        """Wrapper to self.get"""
+        """Wrapper to self.get
+
+        - insert_ts: if True, use position of insert time instead of modify time
+        """
         data = {}
-        x = rh.REDIS.zrange(self._ts_zset_key, pos, pos, withscores=True)
+        key = self._ts_zset_key if not insert_ts else self._in_zset_key
+        x = rh.REDIS.zrange(key, pos, pos, withscores=True)
         if x:
             hash_id, ts = x[0]
             data = self.get(hash_id, **kwargs)
@@ -310,17 +317,24 @@ class Collection(object):
         for key in rh.REDIS.scan_iter('{}*'.format(self._base_key)):
             rh.REDIS.delete(key)
 
-    def delete(self, hash_id, pipe=None):
+    def delete(self, hash_id, pipe=None, insert_ts=False):
         """Delete a specific hash_id's data and remove from indexes it is in
 
         - hash_id: hash_id to remove
         - pipe: if a redis pipeline object is passed in, just add more
           operations to the pipe
+        - insert_ts: if True, use score of insert time instead of modify time
         """
         assert hash_id.startswith(self._base_key), (
             '{} does not start with {}'.format(repr(hash_id), repr(self._base_key))
         )
-        score = rh.REDIS.zscore(self._ts_zset_key, hash_id)
+        if insert_ts:
+            key = self._in_zset_key
+            other_key = self._ts_zset_key
+        else:
+            key = self._ts_zset_key
+            other_key = self._in_zset_key
+        score = rh.REDIS.zscore(key, hash_id)
         if score is None:
             return
         if pipe is not None:
@@ -338,30 +352,34 @@ class Collection(object):
                 pipe.zincrby(self._index_base_keys[k], v, -1)
         if self._unique_field:
             unique_val = self.get(hash_id, self._unique_field)[self._unique_field]
-            pipe.zrem(self._id_zset_key, unique_val)
+            pipe.zrem(key, unique_val)
+            pipe.zrem(other_key, unique_val)
         pipe.delete(self._make_key(hash_id, '_changes'))
+        pipe.zrem(other_key, hash_id)
 
         if execute:
-            pipe.zrem(self._ts_zset_key, hash_id)
+            pipe.zrem(key, hash_id)
             return pipe.execute()
 
-    def delete_to(self, score=None, ts='', tz=None):
+    def delete_to(self, score=None, ts='', tz=None, insert_ts=False):
         """Delete all items with a score (timestamp) between 0 and score
 
         - score: a utc_float
         - ts: a timestamp with form between YYYY and YYYY-MM-DD HH:MM:SS.f
           (in the timezone specified in tz or ADMIN_TIMEZONE)
         - tz: a timezone
+        - insert_ts: if True, use score of insert time instead of modify time
         """
         if ts:
             tz = tz or rh.ADMIN_TIMEZONE
             score = float(rh.date_string_to_utc_float_string(ts, tz))
         if score is None:
             return
+        key = self._ts_zset_key if not insert_ts else self._in_zset_key
         pipe = rh.REDIS.pipeline()
-        for hash_id in rh.REDIS.zrangebyscore(self._ts_zset_key, 0, score):
-            self.delete(hash_id, pipe)
-        pipe.zremrangebyscore(self._ts_zset_key, 0, score)
+        for hash_id in rh.REDIS.zrangebyscore(key, 0, score):
+            self.delete(hash_id, pipe, insert_ts)
+        pipe.zremrangebyscore(key, 0, score)
         return pipe.execute()[-1]
 
     def update(self, hash_id, **data):
@@ -450,10 +468,11 @@ class Collection(object):
             ])
         return results
 
-    def _redis_zset_from_terms(self, terms=''):
+    def _redis_zset_from_terms(self, terms='', insert_ts=False):
         """Return Redis key containing sorted set and bool denoting if its a temp
 
         - terms: string of 'index_field:value' pairs separated by any of , ; |
+        - insert_ts: if True, use score of insert time instead of modify time
 
         Also keep track of count, size, and timestamp stats for any intermediate
         temporary sets created
@@ -464,6 +483,7 @@ class Collection(object):
         stat_base_names = {}
         terms = ih.string_to_set(terms)
         now = self.now_utc_float
+        zset_key = self._ts_zset_key if not insert_ts else self._in_zset_key
         for term in terms:
             index_field, value = term.split(':')
             d[index_field].append(term)
@@ -493,13 +513,13 @@ class Collection(object):
             rh.REDIS.sinterstore(intersect_key, *to_intersect)
             last_key = self._get_next_find_key()
             tmp_keys.append(last_key)
-            rh.REDIS.zinterstore(last_key, (intersect_key, self._ts_zset_key), aggregate='MAX')
+            rh.REDIS.zinterstore(last_key, (intersect_key, zset_key), aggregate='MAX')
         elif len(to_intersect) == 1:
             last_key = self._get_next_find_key()
             tmp_keys.append(last_key)
-            rh.REDIS.zinterstore(last_key, (to_intersect[0], self._ts_zset_key), aggregate='MAX')
+            rh.REDIS.zinterstore(last_key, (to_intersect[0], zset_key), aggregate='MAX')
         else:
-            last_key = self._ts_zset_key
+            last_key = zset_key
 
         if stat_base_names:
             pipe = rh.REDIS.pipeline()
@@ -523,7 +543,7 @@ class Collection(object):
     def find(self, terms='', start=None, end=None, limit=20, desc=None,
              get_fields='', all_fields=False, count=False, ts_fmt=None,
              ts_tz=None, admin_fmt=False, start_ts='', end_ts='', since='',
-             until='', include_meta=True, item_format=''):
+             until='', include_meta=True, item_format='', insert_ts=False):
         """Return a list of dicts (or dict of list of dicts) that match all terms
 
         Multiple values in (terms, get_fields, start_ts, end_ts, since, until)
@@ -550,6 +570,7 @@ class Collection(object):
         - include_meta: if True (and 'count' is False), include attributes
           _id, _ts, and _pos in the results
         - item_format: format string for each item
+        - insert_ts: if True, use score of insert time instead of modify time
         """
         if item_format:
             # Ensure that all fields specified in item_format are fetched
@@ -560,7 +581,7 @@ class Collection(object):
 
         results = {}
         now = self.now_utc_float
-        result_key, result_key_is_tmp = self._redis_zset_from_terms(terms)
+        result_key, result_key_is_tmp = self._redis_zset_from_terms(terms, insert_ts)
         time_ranges = rh.get_time_ranges_and_args(
             tz=ts_tz,
             now=now,
