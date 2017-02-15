@@ -255,7 +255,11 @@ class Collection(object):
 
     def random(self, **kwargs):
         """Wrapper to self.get via self.get_by_position"""
-        return self.get_by_position(random.randint(0, self.size), **kwargs)
+        item = {}
+        if self.size > 0:
+            while item == {}:
+                item = self.get_by_position(random.randint(0, self.size - 1), **kwargs)
+        return item
 
     @classmethod
     def select_model(cls):
