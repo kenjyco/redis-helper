@@ -159,7 +159,7 @@ class Collection(object):
             fields_in_string = set(_CURLY_MATCHER(item_format).get('curly_group_list', []))
             fields = fields_in_string - META_FIELDS
             if META_FIELDS.intersection(fields_in_string):
-                include_meta=True
+                include_meta = True
         else:
             fields = ih.string_to_set(fields)
         num_fields = len(fields)
@@ -577,7 +577,7 @@ class Collection(object):
             fields_in_string = set(_CURLY_MATCHER(item_format).get('curly_group_list', []))
             get_fields = ','.join(fields_in_string - META_FIELDS)
             if META_FIELDS.intersection(fields_in_string):
-                include_meta=True
+                include_meta = True
 
         results = {}
         now = self.now_utc_float
