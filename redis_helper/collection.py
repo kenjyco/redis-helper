@@ -7,6 +7,11 @@ from collections import defaultdict
 from functools import partial
 from itertools import chain
 from redis import ResponseError
+from input_helper import matcher
+
+
+META_FIELDS = {'_id', '_ts'}
+_CURLY_MATCHER = matcher.CurlyMatcher()
 
 
 class Collection(object):
@@ -147,7 +152,14 @@ class Collection(object):
         - item_format: format string for each item (return a string instead of
           a dict)
         """
-        fields = ih.string_to_set(fields)
+        if item_format:
+            # Ensure that all fields specified in item_format are fetched
+            fields_in_string = set(_CURLY_MATCHER(item_format).get('curly_group_list', []))
+            fields = fields_in_string - META_FIELDS
+            if META_FIELDS.intersection(fields_in_string):
+                include_meta=True
+        else:
+            fields = ih.string_to_set(fields)
         num_fields = len(fields)
         if timestamp_formatter == rh.identity and include_meta:
             if ts_fmt or ts_tz or admin_fmt:
@@ -539,6 +551,13 @@ class Collection(object):
           _id, _ts, and _pos in the results
         - item_format: format string for each item
         """
+        if item_format:
+            # Ensure that all fields specified in item_format are fetched
+            fields_in_string = set(_CURLY_MATCHER(item_format).get('curly_group_list', []))
+            get_fields = ','.join(fields_in_string - META_FIELDS)
+            if META_FIELDS.intersection(fields_in_string):
+                include_meta=True
+
         results = {}
         now = self.now_utc_float
         result_key, result_key_is_tmp = self._redis_zset_from_terms(terms)
