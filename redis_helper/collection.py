@@ -253,12 +253,63 @@ class Collection(object):
             data = self.get(hash_id, **kwargs)
         return data
 
-    def random(self, **kwargs):
-        """Wrapper to self.get via self.get_by_position"""
+    def random(self, terms='', start=None, end=None, ts_fmt=None, ts_tz=None,
+               admin_fmt=False, start_ts='', end_ts='', since='', until='',
+               **get_kwargs):
+        """Wrapper to self.get via self.get_by_position (or a pseudo self.find)
+
+        - terms: string of 'index_field:value' pairs separated by any of , ; |
+            - if provided, return a random result from the result set
+        - start: utc_float
+        - end: utc_float
+        - ts_fmt: strftime format for the returned timestamps (_ts field)
+        - ts_tz: a timezone to convert the timestamp to before formatting
+        - admin_fmt: if True, use format and timezone defined in settings file
+        - start_ts: timestamps with form between YYYY and YYYY-MM-DD HH:MM:SS.f
+          (in the timezone specified in ts_tz or ADMIN_TIMEZONE)
+        - end_ts: timestamps with form between YYYY and YYYY-MM-DD HH:MM:SS.f
+          (in the timezone specified in ts_tz or ADMIN_TIMEZONE)
+        - since: 'num:unit' strings (i.e. 15:seconds, 1.5:weeks, etc)
+        - until: 'num:unit' strings (i.e. 15:seconds, 1.5:weeks, etc)
+        - get_kwargs: dict of keyword arguments to pass to self.get
+        """
         item = {}
-        if self.size > 0:
+        if terms:
+            insert_ts = get_kwargs.get('insert_ts', False)
+            now = self.now_utc_float
+            result_key, result_key_is_tmp = self._redis_zset_from_terms(terms, insert_ts)
+            time_ranges = rh.get_time_ranges_and_args(
+                tz=ts_tz,
+                now=now,
+                start=start,
+                end=end,
+                start_ts=start_ts,
+                end_ts=end_ts,
+                since=since,
+                until=until
+            )
+            timestamp_formatter = rh.get_timestamp_formatter_from_args(
+                ts_fmt=ts_fmt,
+                ts_tz=ts_tz,
+                admin_fmt=admin_fmt
+            )
+            get_kwargs['timestamp_formatter'] = timestamp_formatter
+
+            # Select a single time_range, assuming that the longest key name
+            # is the "most specific" (even thought that isn't always true)
+            time_range_key = sorted(time_ranges.keys(), key=lambda x: len(x))[-1]
+            _start, _end = time_ranges[time_range_key]
+            result_count = rh.REDIS.zcount(result_key, _start, _end)
+            if result_count > 0:
+                ten_hash_ids = rh.REDIS.zrangebyscore(result_key, _start, _end, start=0, num=10)
+                hash_id = random.choice(ten_hash_ids)
+                item = self.get(hash_id, **get_kwargs)
+
+            if result_key_is_tmp:
+                rh.REDIS.delete(result_key)
+        elif self.size > 0:
             while item == {}:
-                item = self.get_by_position(random.randint(0, self.size - 1), **kwargs)
+                item = self.get_by_position(random.randint(0, self.size - 1), **get_kwargs)
         return item
 
     @classmethod
