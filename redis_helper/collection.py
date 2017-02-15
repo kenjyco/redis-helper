@@ -245,6 +245,7 @@ class Collection(object):
         - insert_ts: if True, use position of insert time instead of modify time
         """
         data = {}
+        insert_ts = kwargs.get('insert_ts', False)
         key = self._ts_zset_key if not insert_ts else self._in_zset_key
         x = rh.REDIS.zrange(key, pos, pos, withscores=True)
         if x:
