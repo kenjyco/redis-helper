@@ -1,6 +1,24 @@
 About
 -----
 
+Install redis-helper, create an instance of ``redis_helper.Collection``
+(**the args/kwargs define the model**) and use the ``add``, ``get``,
+``update``, ``delete``, and ``find`` methods to:
+
+-  quickly store/retrieve/modify Python dicts in Redis
+-  filter through indexed fields with simple/flexible find arguments
+-  power real-time dashboards with metrics at a variety of time ranges
+-  super-charge event logging and system debugging
+-  build FAST prototypes and simulators
+-  greatly simplify data access patterns throughout application
+
+See the `request logging demo <https://asciinema.org/a/101422?t=1:10>`__
+and `urls
+demo <https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00>`__ (with
+``unique_field`` defined). The
+`examples <https://github.com/kenjyco/redis-helper/tree/master/examples>`__
+they reference are **short** and **easy to read**.
+
 The `redis-helper project <https://github.com/kenjyco/redis-helper>`__
 evolved from a `reference Python
 project <https://github.com/kenjyco/beu/tree/4aea6146fc5f01df3e344b9fadddf28b795dac89>`__
@@ -16,24 +34,6 @@ interact with** in the shell (for exploration, experimentation, and
 debugging). Most methods on a ``Collection`` help **minimize typing**
 (passing multiple arguments in a single delimited string when
 appropriate) and do "the most reasonable thing" whenever possible.
-
-Install redis-helper, create an instance of ``redis_helper.Collection``
-(**``__init__`` args/kwargs define the model**) and use the ``add``,
-``get``, ``update``, ``delete``, and ``find`` methods to:
-
--  quickly store/retrieve/modify Python dicts in Redis
--  filter through indexed fields with simple/flexible find arguments
--  power real-time dashboards with metrics at a variety of time ranges
--  super-charge event logging and system debugging
--  build FAST prototypes and simulators
--  greatly simplify data access patterns throughout application
-
-See the `request logging demo <https://asciinema.org/a/101422?t=1:10>`__
-and `urls
-demo <https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00>`__ (with
-``unique_field`` defined). The
-`examples <https://github.com/kenjyco/redis-helper/tree/master/examples>`__
-they reference are **short** and **easy to read**.
 
 The first time that ``redis_helper`` is imported, the sample
 `settings.ini <https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini>`__

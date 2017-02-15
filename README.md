@@ -9,20 +9,8 @@
 [examples]: https://github.com/kenjyco/redis-helper/tree/master/examples
 [settings.ini]: https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini
 
-The [redis-helper project][] evolved from a [reference Python project][beu-fork]
-that would be **easy to teach** and follow many practical best practices and
-useful patterns.  Main purpose was to have something that was super **easy to
-configure** (a single `~/.config/redis-helper/settings.ini` file for multiple
-application environments) that did cool things with [Redis][].
-
-The [redis-helper package][] provides a `Collection` class that was designed to
-be **easy to interact with** in the shell (for exploration, experimentation, and
-debugging). Most methods on a `Collection` help **minimize typing** (passing
-multiple arguments in a single delimited string when appropriate) and do "the
-most reasonable thing" whenever possible.
-
 Install redis-helper, create an instance of `redis_helper.Collection`
-(**`__init__` args/kwargs define the model**) and use the `add`, `get`, `update`,
+(**the args/kwargs define the model**) and use the `add`, `get`, `update`,
 `delete`, and `find` methods to:
 
 - quickly store/retrieve/modify Python dicts in Redis
@@ -35,6 +23,18 @@ Install redis-helper, create an instance of `redis_helper.Collection`
 See the [request logging demo][] and [urls demo][] (with `unique_field`
 defined). The [examples][] they reference are **short** and **easy to
 read**.
+
+The [redis-helper project][] evolved from a [reference Python project][beu-fork]
+that would be **easy to teach** and follow many practical best practices and
+useful patterns.  Main purpose was to have something that was super **easy to
+configure** (a single `~/.config/redis-helper/settings.ini` file for multiple
+application environments) that did cool things with [Redis][].
+
+The [redis-helper package][] provides a `Collection` class that was designed to
+be **easy to interact with** in the shell (for exploration, experimentation, and
+debugging). Most methods on a `Collection` help **minimize typing** (passing
+multiple arguments in a single delimited string when appropriate) and do "the
+most reasonable thing" whenever possible.
 
 The first time that `redis_helper` is imported, the sample
 [settings.ini][] file will be copied to the `~/.config/redis-helper`
