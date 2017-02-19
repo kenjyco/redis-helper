@@ -181,3 +181,8 @@ if __name__ == '__main__':
         print('\nurls size:', urls.size)
         print('\nTop 3 index values per index:')
         pprint(urls.index_field_info(3))
+
+        item_format = '"{name}" is a {_type} on {domain}... url={url}'
+        print('\nHere is a random selection from the collection')
+        print('using item_format={}\n'.format(repr(item_format)))
+        print(urls.random(item_format=item_format))
