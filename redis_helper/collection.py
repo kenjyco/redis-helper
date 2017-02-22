@@ -338,9 +338,19 @@ class Collection(object):
         return self.get_by_position(-1)
 
     @property
+    def last_admin(self):
+        """Return the last item in the collection"""
+        return self.get_by_position(-1, admin_fmt=True)
+
+    @property
     def first(self):
         """Return the first item in the collection"""
         return self.get_by_position(0)
+
+    @property
+    def first_admin(self):
+        """Return the first item in the collection"""
+        return self.get_by_position(0, admin_fmt=True)
 
     @property
     def size(self):
