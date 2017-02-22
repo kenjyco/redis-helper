@@ -12,10 +12,7 @@ EXAMPLE_FILES = [
 
 
 @click.command()
-@click.option(
-    '--directory', '-d', 'directory', default='.', type=click.Path(),
-    help='directory to downloaded examples to'
-)
+@click.argument('directory', default='.', type=click.Path())
 def main(directory):
     """Download redis-helper example files from github"""
     directory = os.path.abspath(os.path.expanduser(directory))
