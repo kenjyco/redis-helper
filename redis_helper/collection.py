@@ -154,6 +154,8 @@ class Collection(object):
         - insert_ts: if True and include_meta is True, return the insert time
           for the '_ts' meta field (instead of modify time)
         """
+        if admin_fmt or ts_fmt or ts_tz:
+            include_meta = True
         if item_format:
             # Ensure that all fields specified in item_format are fetched
             fields_in_string = set(_CURLY_MATCHER(item_format).get('curly_group_list', []))
@@ -274,6 +276,14 @@ class Collection(object):
         - get_kwargs: dict of keyword arguments to pass to self.get
         """
         item = {}
+        timestamp_formatter = rh.get_timestamp_formatter_from_args(
+            ts_fmt=ts_fmt,
+            ts_tz=ts_tz,
+            admin_fmt=admin_fmt
+        )
+        get_kwargs['timestamp_formatter'] = timestamp_formatter
+        if admin_fmt or ts_fmt or ts_tz:
+            get_kwargs['include_meta'] = True
         if terms:
             insert_ts = get_kwargs.get('insert_ts', False)
             now = self.now_utc_float
@@ -288,12 +298,6 @@ class Collection(object):
                 since=since,
                 until=until
             )
-            timestamp_formatter = rh.get_timestamp_formatter_from_args(
-                ts_fmt=ts_fmt,
-                ts_tz=ts_tz,
-                admin_fmt=admin_fmt
-            )
-            get_kwargs['timestamp_formatter'] = timestamp_formatter
 
             # Select a single time_range, assuming that the longest key name
             # is the "most specific" (even thought that isn't always true)
