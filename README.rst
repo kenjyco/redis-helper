@@ -101,6 +101,8 @@ Collection will have a name pattern that starts with the ``_base_key``.
    collection should not contain duplicate values for that particular
    field
 
+   -  the ``unique_field`` cannot also be included in ``json_fields`` or
+      ``pickle_fields``
    -  if you specify a ``unique_field``, that field must exist on each
       item you add to the collection
 

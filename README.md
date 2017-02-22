@@ -105,6 +105,8 @@ notes = rh.Collection(
 
 - a `unique_field` can be specified on a collection if items in the collection
   should not contain duplicate values for that particular field
+    - the `unique_field` cannot also be included in `json_fields` or
+      `pickle_fields`
     - if you specify a `unique_field`, that field must exist on each item you
       add to the collection
 - use `index_fields` to specify which fields you will want to filter on when
