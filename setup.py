@@ -33,6 +33,7 @@ setup(
     entry_points={
         'console_scripts': [
             'rh-download-examples=redis_helper.scripts.download_examples:main',
+            'rh-download-scripts=redis_helper.scripts.download_scripts:main',
             'rh-notes=redis_helper.scripts.notes:main',
             'rh-shell=redis_helper.scripts.shell:main',
         ],
