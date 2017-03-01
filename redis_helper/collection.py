@@ -7,11 +7,10 @@ from collections import defaultdict
 from functools import partial
 from itertools import chain
 from redis import ResponseError
-from input_helper import matcher
 
 
 META_FIELDS = {'_id', '_ts'}
-_CURLY_MATCHER = matcher.CurlyMatcher()
+_CURLY_MATCHER = ih.matcher.CurlyMatcher()
 
 
 class Collection(object):
