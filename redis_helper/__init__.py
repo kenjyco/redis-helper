@@ -11,14 +11,10 @@ from itertools import product, zip_longest, chain
 from redis import StrictRedis
 
 
-__doc__ = """Easily store, index, and modify Python dicts in Redis (with flexible searching)
+__doc__ = """Create an instance of `redis_helper.Collection` and use it
 
-Create an instance of `redis_helper.Collection` and use the 'add', 'get',
-'update', 'delete', and 'find' methods to
-
-- quickly store/retrieve/modify Python dicts in Redis
-- filter through indexed fields with simple/flexible find arguments
-- gather count metrics or actual data at a variety of time ranges at once
+import redis_helper as rh
+model = rh.Collection(...)
 """
 
 

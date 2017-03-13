@@ -14,7 +14,14 @@ _CURLY_MATCHER = ih.matcher.CurlyMatcher()
 
 
 class Collection(object):
-    """Store, index, and modify Python dicts in redis with flexible searching
+    """Store, index, and modify Python dicts in Redis with flexible searching
+
+    Create an instance of `redis_helper.Collection` and use the 'add', 'get',
+    'update', 'delete', and 'find' methods to
+
+    - quickly store/retrieve/modify Python dicts in Redis
+    - filter through indexed fields with simple/flexible find arguments
+    - gather count metrics or actual data at a variety of time ranges at once
     """
     def __init__(self, namespace, name, unique_field='', index_fields='',
                  json_fields='', pickle_fields='', insert_ts=False):
