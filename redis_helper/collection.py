@@ -6,6 +6,8 @@ import input_helper as ih
 from collections import defaultdict
 from functools import partial
 from itertools import chain
+from io import StringIO
+from pprint import pprint
 from redis import ResponseError
 
 
@@ -366,6 +368,19 @@ class Collection(object):
     def size(self):
         """Return cardinality of self._ts_zset_key (number of items in the zset)"""
         return rh.REDIS.zcard(self._ts_zset_key)
+
+    @property
+    def info(self):
+        s = StringIO()
+        s.write('_init_args: {}'.format(self._init_args))
+        s.write('\n\nsize: {}'.format(self.size))
+        s.write('\n\nkeyspace:\n')
+        pprint(self.keyspace, s)
+        s.write('\nindex_field_info:\n ')
+        pprint(self.index_field_info(), s)
+        s.write('\nrandom:\n ')
+        pprint(self.random(), s)
+        return s.getvalue()
 
     @property
     def now_pretty(self):
