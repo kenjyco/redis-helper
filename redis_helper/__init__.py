@@ -2,6 +2,7 @@ import configparser
 import os.path
 import textwrap
 import pytz
+import logging
 import input_helper as ih
 from os import getenv, makedirs
 from shutil import copyfile
@@ -16,6 +17,21 @@ __doc__ = """Create an instance of `redis_helper.Collection` and use it
 import redis_helper as rh
 model = rh.Collection(...)
 """
+
+
+LOGFILE = os.path.abspath('log--redis-helper.log')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler(LOGFILE, mode='a')
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(levelname)s - %(funcName)s: %(message)s'
+))
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter('%(asctime)s: %(message)s'))
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 
 def _get_settings_file():
