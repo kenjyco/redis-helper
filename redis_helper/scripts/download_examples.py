@@ -8,6 +8,8 @@ EXAMPLE_URL_BASE = 'https://raw.githubusercontent.com/kenjyco/redis-helper/maste
 EXAMPLE_FILES = [
     'request_logs.py',
     'urls.py',
+    'game.py',
+    'sample.py',
 ]
 
 
