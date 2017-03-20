@@ -83,6 +83,11 @@ class Collection(object):
         ])
         rh.REDIS.hincrby(self.__class__.__name__, self._init_args, 1)
 
+        if self.__class__.__name__ != 'Collection':
+            item = rh.REDIS.get(self._init_args)
+            if not item:
+                rh.REDIS.set(self._init_args, pickle.dumps(self))
+
     def __repr__(self):
         return self._init_args
 
@@ -341,8 +346,16 @@ class Collection(object):
             item_format='({count} instances) {name}',
             wrap=False
         )
+
         if selected:
-            return eval('rh.{}'.format(selected[0]['name']))
+            if cls.__name__ == 'Collection':
+                return eval('rh.{}'.format(selected[0]['name']))
+
+            pickle_string = rh.REDIS.get(selected[0]['name'])
+            if pickle_string:
+                return pickle.loads(pickle_string)
+
+            rh.logger.error('Unable to load model {}'.format(selected[0]['name']))
 
     @property
     def last(self):
