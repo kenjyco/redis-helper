@@ -123,29 +123,61 @@ except ImportError:
     gameloop = None
 else:
     class GameLoop(GetCharLoop):
-        def __init__(self, name, *args, **kwargs):
-            self.display_name = name
-            self.name = name.replace(' ', '_').lower()
+        def __init__(self, *args, **kwargs):
+            self._character_name = kwargs.pop('character_name', '')
+            self._display_name = kwargs.pop('display_name', '')
             super().__init__(*args, **kwargs)
+            self._validate()
 
+        def _validate(self):
+            """Make sure everything is as it should be"""
+            errors = []
+            if not self._character_name:
+                errors.append('No character_name provided')
+            elif ' ' in self._character_name:
+                errors.append('There are spaces in the character_name {}'.format(repr(self._character_name)))
+
+            if errors:
+                raise Exception('\n'.join(errors))
+
+        def info(self):
+            """Print/return character info"""
+            i = {
+                'display_name': self._display_name,
+                'character_name': self._character_name,
+                'position': CharacterController.get_position(self._character_name, log=False)
+            }
+            logger.info('Character {} ({}) is at position ({}, {})'.format(
+                i['character_name'],
+                i['display_name'],
+                i['position']['x'],
+                i['position']['y']
+            ))
+            return i
 
 if GameLoop:
-    name = ih.user_input('\nwhat is the character name')
+    display_name = ih.user_input('\nWhat is the character name')
+    character_name = display_name.replace(' ', '_').lower()
 
     # Keyboard shortcuts that work when the gameloop is running
     chfunc = {
-        'h': (partial(CharacterController.move_left, name, 1), 'move left 1 space'),
-        'l': (partial(CharacterController.move_right, name, 1), 'move right 1 space'),
-        'k': (partial(CharacterController.move_up, name, 1), 'move up 1 space'),
-        'j': (partial(CharacterController.move_down, name, 1), 'move down 1 space'),
-        'H': (partial(CharacterController.move_left, name, 5), 'move left 5 spaces'),
-        'L': (partial(CharacterController.move_right, name, 5), 'move right 5 spaces'),
-        'K': (partial(CharacterController.move_up, name, 5), 'move up 5 spaces'),
-        'J': (partial(CharacterController.move_down, name, 5), 'move down 5 spaces'),
-        'p': (partial(CharacterController.get_position, name), 'current position'),
+        'h': (partial(CharacterController.move_left, character_name, 1), 'move left 1 space'),
+        'l': (partial(CharacterController.move_right, character_name, 1), 'move right 1 space'),
+        'k': (partial(CharacterController.move_up, character_name, 1), 'move up 1 space'),
+        'j': (partial(CharacterController.move_down, character_name, 1), 'move down 1 space'),
+        'H': (partial(CharacterController.move_left, character_name, 5), 'move left 5 spaces'),
+        'L': (partial(CharacterController.move_right, character_name, 5), 'move right 5 spaces'),
+        'K': (partial(CharacterController.move_up, character_name, 5), 'move up 5 spaces'),
+        'J': (partial(CharacterController.move_down, character_name, 5), 'move down 5 spaces'),
+        'p': (partial(CharacterController.get_position, character_name), 'current position'),
     }
-
-    gameloop = GameLoop(name, chfunc_dict=chfunc, prompt='game-repl> ')
+    gameloop = GameLoop(
+        chfunc_dict=chfunc,
+        prompt='game-repl> ',
+        name='mygame',
+        character_name=character_name,
+        display_name=display_name,
+    )
 
 if __name__ == '__main__':
     if GameLoop:
