@@ -100,6 +100,16 @@ class CharacterController(object):
             logger.info('Character {} moved down by {}'.format(character_name, n))
 
     @classmethod
+    def go(cls, character_name, x, y, log=True):
+        """Move 'character_name' to a specific location"""
+        pipe = rh.REDIS.pipeline()
+        pipe.hset(cls.x_positions, character_name, x)
+        pipe.hset(cls.y_positions, character_name, y)
+        pipe.execute()
+        if log:
+            logger.info('Character {} moved to ({}, {})'.format(character_name, x, y))
+
+    @classmethod
     def get_position(cls, character_name, log=True):
         """Log current position for character_name and return coordinates as a dict"""
         position = {
@@ -154,6 +164,27 @@ else:
                 i['position']['y']
             ))
             return i
+
+        def go(self, *args):
+            """Move to a specific location"""
+            errors = []
+            x = None
+            y = None
+            if len(args) == 2:
+                x, y = args
+                x = ih.from_string(x)
+                y = ih.from_string(y)
+                if isinstance(x, str):
+                    errors.append('x coordinate {} is not a number'.format(repr(x)))
+                if isinstance(y, str):
+                    errors.append('y coordinate {} is not a number'.format(repr(y)))
+            else:
+                errors.append('You must specify an x and y coordinate, not {}'.format(repr(args)))
+
+            if errors:
+                logger.error(' | '.join(errors))
+            else:
+                CharacterController.go(self._character_name, x, y)
 
 if GameLoop:
     display_name = ih.user_input('\nWhat is the character name')
