@@ -4,7 +4,6 @@ import input_helper as ih
 import redis_helper as rh
 from functools import partial
 from enum import Enum
-from pprint import pprint
 
 
 LOGFILE = os.path.abspath('log--mmorpg-game.log')
@@ -73,35 +72,53 @@ class CharacterController(object):
     y_positions = 'mmo:positions:y'
 
     @classmethod
-    def move_right(cls, name, n=1):
-        rh.REDIS.hincrby(cls.x_positions, name, n)
+    def move_right(cls, character_name, n=1, log=True):
+        """Move 'character_name' right 'n' spaces and log"""
+        rh.REDIS.hincrbyfloat(cls.x_positions, character_name, n)
+        if log:
+            logger.info('Character {} moved right by {}'.format(character_name, n))
 
     @classmethod
-    def move_left(cls, name, n=1):
-        rh.REDIS.hincrby(cls.x_positions, name, -1 * n)
+    def move_left(cls, character_name, n=1, log=True):
+        """Move 'character_name' left 'n' spaces and log"""
+        rh.REDIS.hincrbyfloat(cls.x_positions, character_name, -1 * n)
+        if log:
+            logger.info('Character {} moved left by {}'.format(character_name, n))
 
     @classmethod
-    def move_up(cls, name, n=1):
-        rh.REDIS.hincrby(cls.y_positions, name, n)
+    def move_up(cls, character_name, n=1, log=True):
+        """Move 'character_name' up 'n' spaces and log"""
+        rh.REDIS.hincrbyfloat(cls.y_positions, character_name, n)
+        if log:
+            logger.info('Character {} moved up by {}'.format(character_name, n))
 
     @classmethod
-    def move_down(cls, name, n=1):
-        rh.REDIS.hincrby(cls.y_positions, name, -1 * n)
+    def move_down(cls, character_name, n=1, log=True):
+        """Move 'character_name' down 'n' spaces and log"""
+        rh.REDIS.hincrbyfloat(cls.y_positions, character_name, -1 * n)
+        if log:
+            logger.info('Character {} moved down by {}'.format(character_name, n))
 
     @classmethod
-    def get_position(cls, name):
+    def get_position(cls, character_name, log=True):
+        """Log current position for character_name and return coordinates as a dict"""
         position = {
-            'x': ih.decode(rh.REDIS.hget(cls.x_positions, name)) or 0,
-            'y': ih.decode(rh.REDIS.hget(cls.y_positions, name)) or 0,
+            'x': ih.decode(rh.REDIS.hget(cls.x_positions, character_name)) or 0,
+            'y': ih.decode(rh.REDIS.hget(cls.y_positions, character_name)) or 0,
         }
-        print(position)
+        if log:
+            logger.info('Character {} is at position ({}, {})'.format(
+                character_name,
+                position['x'],
+                position['y']
+            ))
         return position
 
 
 try:
     from chloop import GetCharLoop
 except ImportError:
-    print('\nInstall "chloop" package to this virtual environment to run the gameloop')
+    logger.error('Install "chloop" package to this virtual environment to run the gameloop')
     GameLoop = None
     gameloop = None
 else:
@@ -132,7 +149,7 @@ if GameLoop:
 
 if __name__ == '__main__':
     if GameLoop:
-        print('Starting the gameloop...\n\n')
+        logger.info('Starting the gameloop...')
         gameloop()
     else:
-        print('\nExplore the following objects: PLAYERS, CHARACTERS, ITEMS, MESSAGES, Player, CharacterController')
+        logger.info('Explore the following objects: PLAYERS, CHARACTERS, ITEMS, MESSAGES, Player, CharacterController')
