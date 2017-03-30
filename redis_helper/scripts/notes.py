@@ -5,7 +5,7 @@ import redis_helper as rh
 
 class Notes(rh.Collection):
     def __init__(self, *args, **kwargs):
-        kwargs['json_fields'] = ','.join(ih.MULTI_MATCHER_RETURN_FIELDS)
+        kwargs['json_fields'] = ','.join(ih.SPECIAL_TEXT_RETURN_FIELDS)
         super().__init__(*args, **kwargs)
 
     def add_parsed(self, parsed_text, topic):
