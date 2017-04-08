@@ -1,4 +1,5 @@
 import logging
+import random
 import os.path
 import input_helper as ih
 import redis_helper as rh
@@ -197,6 +198,30 @@ else:
                 CharacterController.go(self._character_name, x, y)
             else:
                 logger.error('You must specify an x and y coordinate, not {}'.format(repr(args)))
+
+        def random(self):
+            """Move to a random position"""
+            CharacterController.go(
+                self._character_name,
+                random.randint(-1000, 1000),
+                random.randint(-1000, 1000)
+            )
+
+        def left(self, n):
+            """Move left n units"""
+            CharacterController.move_left(self._character_name, ih.from_string(n))
+
+        def right(self, n):
+            """Move right n units"""
+            CharacterController.move_right(self._character_name, ih.from_string(n))
+
+        def up(self, n):
+            """Move up n units"""
+            CharacterController.move_up(self._character_name, ih.from_string(n))
+
+        def down(self, n):
+            """Move down n units"""
+            CharacterController.move_down(self._character_name, ih.from_string(n))
 
 
 if GameLoop:
