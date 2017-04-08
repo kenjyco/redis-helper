@@ -230,14 +230,18 @@ if GameLoop:
 
     # Keyboard shortcuts that work when the gameloop is running
     chfunc = {
-        'h': (partial(CharacterController.move_left, character_name, 1), 'move left 1 space'),
-        'l': (partial(CharacterController.move_right, character_name, 1), 'move right 1 space'),
-        'k': (partial(CharacterController.move_up, character_name, 1), 'move up 1 space'),
-        'j': (partial(CharacterController.move_down, character_name, 1), 'move down 1 space'),
-        'H': (partial(CharacterController.move_left, character_name, 5), 'move left 5 spaces'),
-        'L': (partial(CharacterController.move_right, character_name, 5), 'move right 5 spaces'),
-        'K': (partial(CharacterController.move_up, character_name, 5), 'move up 5 spaces'),
-        'J': (partial(CharacterController.move_down, character_name, 5), 'move down 5 spaces'),
+        'h': (partial(CharacterController.move_left, character_name, 2), 'move left 2 units'),
+        'l': (partial(CharacterController.move_right, character_name, 2), 'move right 2 units'),
+        'k': (partial(CharacterController.move_up, character_name, 2), 'move up 2 units'),
+        'j': (partial(CharacterController.move_down, character_name, 2), 'move down 2 units'),
+        'H': (partial(CharacterController.move_left, character_name, 5), 'move left 5 units'),
+        'L': (partial(CharacterController.move_right, character_name, 5), 'move right 5 units'),
+        'K': (partial(CharacterController.move_up, character_name, 5), 'move up 5 units'),
+        'J': (partial(CharacterController.move_down, character_name, 5), 'move down 5 units'),
+        '\x1b[D': (partial(CharacterController.move_left, character_name, 1), '(left arrow) move left 1 unit'),
+        '\x1b[C': (partial(CharacterController.move_right, character_name, 1), '(right arrow) move right 1 unit'),
+        '\x1b[A': (partial(CharacterController.move_up, character_name, 1), '(up arrow) move up 1 unit'),
+        '\x1b[B': (partial(CharacterController.move_down, character_name, 1), '(down arrow) move down 1 unit'),
         'p': (partial(CharacterController.get_position, character_name), 'current position'),
     }
     gameloop = GameLoop(
@@ -247,6 +251,7 @@ if GameLoop:
         character_name=character_name,
         display_name=display_name,
     )
+
 
 if __name__ == '__main__':
     if GameLoop:
