@@ -74,40 +74,61 @@ class CharacterController(object):
     @classmethod
     def move_right(cls, character_name, n=1, log=True):
         """Move 'character_name' right 'n' spaces and log"""
-        rh.REDIS.hincrbyfloat(cls.x_positions, character_name, n)
-        if log:
-            logger.info('Character {} moved right by {}'.format(character_name, n))
+        if isinstance(n, (int, float)):
+            rh.REDIS.hincrbyfloat(cls.x_positions, character_name, n)
+            if log:
+                logger.info('Character {} moved right by {}'.format(character_name, n))
+        elif log:
+            logger.error('Character {} cannot move right by {}'.format(character_name, repr(n)))
 
     @classmethod
     def move_left(cls, character_name, n=1, log=True):
         """Move 'character_name' left 'n' spaces and log"""
-        rh.REDIS.hincrbyfloat(cls.x_positions, character_name, -1 * n)
-        if log:
-            logger.info('Character {} moved left by {}'.format(character_name, n))
+        if isinstance(n, (int, float)):
+            rh.REDIS.hincrbyfloat(cls.x_positions, character_name, -1 * n)
+            if log:
+                logger.info('Character {} moved left by {}'.format(character_name, n))
+        elif log:
+            logger.error('Character {} cannot move left by {}'.format(character_name, repr(n)))
 
     @classmethod
     def move_up(cls, character_name, n=1, log=True):
         """Move 'character_name' up 'n' spaces and log"""
-        rh.REDIS.hincrbyfloat(cls.y_positions, character_name, n)
-        if log:
-            logger.info('Character {} moved up by {}'.format(character_name, n))
+        if isinstance(n, (int, float)):
+            rh.REDIS.hincrbyfloat(cls.y_positions, character_name, n)
+            if log:
+                logger.info('Character {} moved up by {}'.format(character_name, n))
+        elif log:
+            logger.error('Character {} cannot move up by {}'.format(character_name, repr(n)))
 
     @classmethod
     def move_down(cls, character_name, n=1, log=True):
         """Move 'character_name' down 'n' spaces and log"""
-        rh.REDIS.hincrbyfloat(cls.y_positions, character_name, -1 * n)
-        if log:
-            logger.info('Character {} moved down by {}'.format(character_name, n))
+        if isinstance(n, (int, float)):
+            rh.REDIS.hincrbyfloat(cls.y_positions, character_name, -1 * n)
+            if log:
+                logger.info('Character {} moved down by {}'.format(character_name, n))
+        elif log:
+            logger.error('Character {} cannot move down by {}'.format(character_name, repr(n)))
 
     @classmethod
     def go(cls, character_name, x, y, log=True):
         """Move 'character_name' to a specific location"""
-        pipe = rh.REDIS.pipeline()
-        pipe.hset(cls.x_positions, character_name, x)
-        pipe.hset(cls.y_positions, character_name, y)
-        pipe.execute()
-        if log:
-            logger.info('Character {} moved to ({}, {})'.format(character_name, x, y))
+        errors = []
+        if not isinstance(x, (int, float)):
+            errors.append('Invalid x value: {}'.format(repr(x)))
+        if not isinstance(y, (int, float)):
+            errors.append('Invalid y value: {}'.format(repr(y)))
+
+        if not errors:
+            pipe = rh.REDIS.pipeline()
+            pipe.hset(cls.x_positions, character_name, x)
+            pipe.hset(cls.y_positions, character_name, y)
+            pipe.execute()
+            if log:
+                logger.info('Character {} moved to ({}, {})'.format(character_name, x, y))
+        elif log:
+            logger.error(' | '.join(errors))
 
     @classmethod
     def get_position(cls, character_name, log=True):
@@ -167,24 +188,16 @@ else:
 
         def go(self, *args):
             """Move to a specific location"""
-            errors = []
             x = None
             y = None
             if len(args) == 2:
                 x, y = args
                 x = ih.from_string(x)
                 y = ih.from_string(y)
-                if isinstance(x, str):
-                    errors.append('x coordinate {} is not a number'.format(repr(x)))
-                if isinstance(y, str):
-                    errors.append('y coordinate {} is not a number'.format(repr(y)))
-            else:
-                errors.append('You must specify an x and y coordinate, not {}'.format(repr(args)))
-
-            if errors:
-                logger.error(' | '.join(errors))
-            else:
                 CharacterController.go(self._character_name, x, y)
+            else:
+                logger.error('You must specify an x and y coordinate, not {}'.format(repr(args)))
+
 
 if GameLoop:
     display_name = ih.user_input('\nWhat is the character name')
