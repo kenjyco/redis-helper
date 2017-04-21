@@ -89,7 +89,7 @@ request_logs = rh.Collection(
 )
 
 urls = rh.Collection(
-	'web',
+    'web',
     'url',
     unique_field='name',
     index_fields='domain,_type'
@@ -148,10 +148,10 @@ request_logs.add(
 )
 
 urls.add(
-	name='redis-helper github',
-	url='https://github.com/kenjyco/redis-helper',
-	domain='github.com',
-	_type='repo',
+    name='redis-helper github',
+    url='https://github.com/kenjyco/redis-helper',
+    domain='github.com',
+    _type='repo',
 )
 ```
 
