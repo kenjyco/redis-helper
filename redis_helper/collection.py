@@ -510,7 +510,8 @@ class Collection(object):
         for field, old_value in self.get(hash_id, update_fields).items():
             if data[field] != old_value:
                 k = '{}--{}'.format(field, old_timestamp)
-                pipe.hset(changes_hash_key, k, old_value)
+                if old_value is not None:
+                    pipe.hset(changes_hash_key, k, old_value)
                 if field in self._index_base_keys:
                     old_index_key = self._make_key(self._base_key, field, old_value)
                     index_key = self._make_key(self._base_key, field, data[field])
