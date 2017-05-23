@@ -523,8 +523,12 @@ class Collection(object):
                     data[field] = ujson.dumps(data[field])
                 elif field in self._pickle_fields:
                     data[field] = pickle.dumps(data[field])
-        pipe.hmset(hash_id, data)
-        pipe.zadd(self._ts_zset_key, now, hash_id)
+            else:
+                data.pop(field)
+
+        if data:
+            pipe.hmset(hash_id, data)
+            pipe.zadd(self._ts_zset_key, now, hash_id)
         pipe.execute()
         return hash_id
 
