@@ -594,7 +594,8 @@ class Collection(object):
         now = self.now_utc_float
         zset_key = self._ts_zset_key if not insert_ts else self._in_zset_key
         for term in terms:
-            index_field, value = term.split(':')
+            index_field, *value = term.split(':')
+            value = ':'.join(value)
             d[index_field].append(term)
         for index_field, grouped_terms in d.items():
             if len(grouped_terms) > 1:
