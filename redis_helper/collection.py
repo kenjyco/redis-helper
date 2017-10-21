@@ -202,7 +202,10 @@ class Collection(object):
 
         for field in data.keys():
             if field in self._json_fields:
-                data[field] = ujson.loads(data[field])
+                try:
+                    data[field] = ujson.loads(data[field])
+                except ValueError:
+                    data[field] = ih.decode((data[field]))
             elif field in self._pickle_fields:
                 data[field] = pickle.loads(data[field])
             else:
