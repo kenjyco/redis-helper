@@ -866,7 +866,7 @@ class Collection(object):
         return results
 
     def select_and_modify(self, menu_item_format='', action='update',
-                          update_fields='', **find_kwargs):
+                          prompt='', update_fields='', **find_kwargs):
         """Find items matching 'find_kwargs', make selections, then perform action
 
         - menu_item_format: format string for each menu item
@@ -888,10 +888,19 @@ class Collection(object):
                 '{} is the unique field and cannot be updated'.format(repr(self._unique_field))
             )
         find_kwargs.update(dict(admin_fmt=True, include_meta=True))
+        if 'item_format' in find_kwargs:
+            menu_item_format = find_kwargs.pop('item_format')
+            find_kwargs['all_fields'] = False
+            find_kwargs['get_fields'] = ','.join(ih.get_keys_in_string(menu_item_format))
+        elif menu_item_format:
+            find_kwargs['all_fields'] = False
+            find_kwargs['get_fields'] = ','.join(ih.get_keys_in_string(menu_item_format))
+
         found = self.find(**find_kwargs)
         assert type(found) == list, 'Results contain multiple time ranges... not allowed for now'
         selected = ih.make_selections(
             found,
+            prompt=prompt,
             item_format=menu_item_format,
             wrap=False
         )
