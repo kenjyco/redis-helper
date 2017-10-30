@@ -715,7 +715,8 @@ class Collection(object):
     def find(self, terms='', start=None, end=None, limit=20, desc=None,
              get_fields='', all_fields=False, count=False, ts_fmt=None,
              ts_tz=None, admin_fmt=False, start_ts='', end_ts='', since='',
-             until='', include_meta=True, item_format='', insert_ts=False):
+             until='', include_meta=True, item_format='', insert_ts=False,
+             post_fetch_sort_key='', sort_key_default_val=''):
         """Return a list of dicts (or dict of list of dicts) that match all terms
 
         Multiple values in (terms, get_fields, start_ts, end_ts, since, until)
@@ -743,6 +744,9 @@ class Collection(object):
           _id, _ts, and _pos in the results
         - item_format: format string for each item
         - insert_ts: if True, use score of insert time instead of modify time
+        - post_fetch_sort_key: key of data to sort results by right before returning
+            - no effect if 'item_format' is specified
+        - sort_key_default_val: default value to use when sort key does not exist
         """
         if item_format:
             # Ensure that all fields specified in item_format are fetched
@@ -750,6 +754,12 @@ class Collection(object):
             get_fields = ','.join(fields_in_string - META_FIELDS)
             if META_FIELDS.intersection(fields_in_string):
                 include_meta = True
+        elif post_fetch_sort_key:
+            # Ensure that the post_fetch_sort_key is fetched
+            if post_fetch_sort_key in META_FIELDS:
+                include_meta = True
+            elif not all_fields and post_fetch_sort_key not in get_fields:
+                get_fields += ',{}'.format(post_fetch_sort_key)
 
         results = {}
         now = self.now_utc_float
@@ -834,8 +844,25 @@ class Collection(object):
         if result_key_is_tmp:
             rh.REDIS.delete(result_key)
 
+        def _key_func(x):
+            val = x.get(post_fetch_sort_key, sort_key_default_val)
+            if val is None:
+                val = sort_key_default_val
+            return val
+
         if len(results) == 1:
             results = list(results.values())[0]
+            if not item_format and post_fetch_sort_key:
+                results.sort(
+                    key=_key_func,
+                    reverse=desc is True
+                )
+        elif len(results) > 1 and not item_format and post_fetch_sort_key:
+            for section in results:
+                results[section].sort(
+                    key=_key_func,
+                    reverse=desc is True
+                )
         return results
 
     def select_and_modify(self, menu_item_format='', action='update',
