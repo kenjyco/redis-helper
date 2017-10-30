@@ -925,3 +925,7 @@ class Collection(object):
         for key in rh.REDIS.scan_iter('{}*'.format(self._find_base_key)):
             pipe.delete(key)
         pipe.execute()
+
+    def clear_init_stats(self):
+        """Delete stats stored in self.__class__.__name__ key"""
+        rh.REDIS.delete(self.__class__.__name__)
