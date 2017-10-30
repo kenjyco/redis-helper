@@ -605,6 +605,27 @@ class Collection(object):
             for val in rh.REDIS.zrevrange(self._id_zset_key, start=0, end=limit-1)
         ]
 
+    def top_values_for_index(self, index_name, limit=10):
+        """Return a list of tuples containing top values and counts for 'index_name'
+
+        - index_name: name of index field to get top values and counts for
+            - if index_name is the self._unique_field, the order by most recent
+        """
+        if index_name is self._unique_field:
+            return [
+                (value, 1)
+                for value in self.recent_unique_values(limit=limit)
+            ]
+
+        assert index_name in self._index_base_keys, (
+            '{} is not in {}'.format(repr(index_name), repr(sorted(list(self._index_base_keys.keys()))))
+        )
+        base_key = self._index_base_keys[index_name]
+        return [
+            (ih.decode(name), int(count))
+            for name, count in rh.zshow(base_key, end=limit-1)
+        ]
+
     def index_field_info(self, limit=10):
         """Return list of 2-item tuples (index_field:value, count)
 
