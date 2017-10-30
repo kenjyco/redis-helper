@@ -91,6 +91,26 @@ class Collection(object):
     def __repr__(self):
         return self._init_args
 
+    def __len__(self):
+        return self.size
+
+    def __getitem__(self, i):
+        if type(i) == int:
+            return self.get_by_position(i, include_meta=True)
+        elif type(i) == str and i.startswith(self._base_key):
+            return self.get(i, include_meta=True)
+        elif type(i) == str and self._unique_field and i:
+            val = self.get_by_unique_value(i, include_meta=True)
+            if not val:
+                return self.random(i, include_meta=True)
+            return val
+        elif type(i) == str and i:
+            return self.random(i, include_meta=True)
+        elif type(i) == slice:
+            return self.get_by_slice(i.start, i.stop, include_meta=True)
+        else:
+            return {}
+
     def _make_key(self, *parts):
         """Join the string parts together, separated by colon(:)"""
         return ':'.join([str(part) for part in parts])
@@ -270,6 +290,24 @@ class Collection(object):
             hash_id, ts = x[0]
             data = self.get(hash_id, **kwargs)
         return data
+
+    def get_by_slice(self, start=None, stop=None, **kwargs):
+        """Wrapper to self.get
+
+        - start: start index position
+        - stop: stop index position
+        - insert_ts: if True, use position of insert time instead of modify time
+        """
+        _start = start or 0
+        _stop = stop or -1
+        if stop is not None:
+            _stop -= 1
+        insert_ts = kwargs.get('insert_ts', False)
+        key = self._ts_zset_key if not insert_ts else self._in_zset_key
+        return [
+            self.get(hash_id, **kwargs)
+            for hash_id, ts in rh.REDIS.zrange(key, _start, _stop, withscores=True)
+        ]
 
     def random(self, terms='', start=None, end=None, ts_fmt=None, ts_tz=None,
                admin_fmt=False, start_ts='', end_ts='', since='', until='',
