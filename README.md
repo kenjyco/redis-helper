@@ -40,16 +40,27 @@ The first time that `redis_helper` is imported, the sample
 [settings.ini][] file will be copied to the `~/.config/redis-helper`
 directory.
 
+## Install Redis and start server
+
+```
+% sudo apt-get install -y redis-server
+
+or
+
+% brew install redis@3.2
+% brew services start redis@3.2
+```
+
 ## Install latest tag/release of [redis-helper package][]
 
 ```
-% pip install redis-helper
+% pip3 install redis-helper
 ```
 
 ## Install latest commit on master of [redis-helper project][]
 
 ```
-% pip install git+git://github.com/kenjyco/redis-helper
+% pip3 install git+git://github.com/kenjyco/redis-helper
 ```
 
 ## Intro
@@ -277,6 +288,45 @@ or
 > Note: This option requires `setuptools` to be installed.
 
 ## Usage
+
+The `rh-download-examples`, `rh-download-scripts`, `rh-notes`, and `rh-shell`
+scripts are provided.
+
+```
+$ venv/bin/rh-download-examples --help
+Usage: rh-download-examples [OPTIONS] [DIRECTORY]
+
+  Download redis-helper example files from github
+
+Options:
+  --help  Show this message and exit.
+
+$ venv/bin/rh-download-scripts --help
+Usage: rh-download-scripts [OPTIONS] [DIRECTORY]
+
+  Download redis-helper script files from github
+
+Options:
+  --help  Show this message and exit.
+
+$ venv/bin/rh-notes --help
+Usage: rh-notes [OPTIONS] [TOPIC]
+
+  Prompt user to enter notes (about a topic) until finished; or review notes
+
+Options:
+  -c, --ch TEXT  string appended to the topic (default "> ")
+  -s, --shell    Start an ipython shell to inspect the notes collection
+  --help         Show this message and exit.
+
+$ venv/bin/rh-shell --help
+Usage: rh-shell [OPTIONS]
+
+  Interactively select a Collection model and start ipython shell
+
+Options:
+  --help  Show this message and exit.
+```
 
 ```python
 >>> import redis_helper as rh

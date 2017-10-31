@@ -33,25 +33,37 @@ provides a ``Collection`` class that was designed to be **easy to
 interact with** in the shell (for exploration, experimentation, and
 debugging). Most methods on a ``Collection`` help **minimize typing**
 (passing multiple arguments in a single delimited string when
-appropriate) and do "the most reasonable thing" whenever possible.
+appropriate) and do “the most reasonable thing” whenever possible.
 
 The first time that ``redis_helper`` is imported, the sample
 `settings.ini <https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini>`__
 file will be copied to the ``~/.config/redis-helper`` directory.
+
+Install Redis and start server
+------------------------------
+
+::
+
+    % sudo apt-get install -y redis-server
+
+    or
+
+    % brew install redis@3.2
+    % brew services start redis@3.2
 
 Install latest tag/release of `redis-helper package <https://pypi.python.org/pypi/redis-helper>`__
 --------------------------------------------------------------------------------------------------
 
 ::
 
-    % pip install redis-helper
+    % pip3 install redis-helper
 
 Install latest commit on master of `redis-helper project <https://github.com/kenjyco/redis-helper>`__
 -----------------------------------------------------------------------------------------------------
 
 ::
 
-    % pip install git+git://github.com/kenjyco/redis-helper
+    % pip3 install git+git://github.com/kenjyco/redis-helper
 
 Intro
 -----
@@ -66,8 +78,8 @@ provides the
 class, which contains methods that correspond to all of the Redis server
 commands.
 
-When initializing Collection objects, you must specify the "namespace"
-and "name" of the collection (which are used to create the internally
+When initializing Collection objects, you must specify the “namespace”
+and “name” of the collection (which are used to create the internally
 used ``_base_key`` property). All Redis keys associated with a
 Collection will have a name pattern that starts with the ``_base_key``.
 
@@ -135,7 +147,7 @@ Essentially, you can store a Python
 `dict <https://docs.python.org/3/tutorial/datastructures.html#dictionaries>`__
 in a Redis `hash <https://redis.io/topics/data-types#hashes>`__ and
 index some of the fields in Redis
-`sets <https://redis.io/topics/data-types#sets>`__. The collection's
+`sets <https://redis.io/topics/data-types#sets>`__. The collection’s
 ``_ts_zset_key`` is the Redis key name for the `sorted
 set <https://redis.io/topics/data-types#sorted-sets>`__ containing the
 ``hash_id`` of every hash in the collection (with the ``score`` being a
@@ -197,7 +209,7 @@ Any fields specified in the ``get_fields`` parameter are passed along to
 the ``get`` method (when the actual fetching takes place).
 
 -  when using ``terms``, all terms that include the same field will be
-   treatead like an "or" (union of related sets), then the intersection
+   treatead like an “or” (union of related sets), then the intersection
    of different sets will be computed
 -  see the Redis `set commands <https://redis.io/commands#set>`__ and
    `sorted set commands <https://redis.io/commands#sorted_set>`__
@@ -205,8 +217,8 @@ the ``get`` method (when the actual fetching takes place).
 There are many options for specifying time ranges in the ``find`` method
 including:
 
--  ``since`` and ``until`` when specifying ``num:unit`` strings (i.e.
-   15:seconds, 1.5:weeks, etc)
+-  ``since`` and ``until`` when specifying ``num:unit`` strings
+   (i.e. 15:seconds, 1.5:weeks, etc)
 -  ``start_ts`` and ``end_ts`` when specifying timestamps with a form
    between ``YYYY`` and ``YYYY-MM-DD HH:MM:SS.f``
 -  ``start`` and ``end`` when specifying a ``utc_float``
@@ -294,10 +306,51 @@ or
 
     % venv/bin/python3 setup.py test
 
+..
+
     Note: This option requires ``setuptools`` to be installed.
 
 Usage
 -----
+
+The ``rh-download-examples``, ``rh-download-scripts``, ``rh-notes``, and
+``rh-shell`` scripts are provided.
+
+::
+
+    $ venv/bin/rh-download-examples --help
+    Usage: rh-download-examples [OPTIONS] [DIRECTORY]
+
+      Download redis-helper example files from github
+
+    Options:
+      --help  Show this message and exit.
+
+    $ venv/bin/rh-download-scripts --help
+    Usage: rh-download-scripts [OPTIONS] [DIRECTORY]
+
+      Download redis-helper script files from github
+
+    Options:
+      --help  Show this message and exit.
+
+    $ venv/bin/rh-notes --help
+    Usage: rh-notes [OPTIONS] [TOPIC]
+
+      Prompt user to enter notes (about a topic) until finished; or review notes
+
+    Options:
+      -c, --ch TEXT  string appended to the topic (default "> ")
+      -s, --shell    Start an ipython shell to inspect the notes collection
+      --help         Show this message and exit.
+
+    $ venv/bin/rh-shell --help
+    Usage: rh-shell [OPTIONS]
+
+      Interactively select a Collection model and start ipython shell
+
+    Options:
+      --help  Show this message and exit.
 
 .. code:: python
 
@@ -336,20 +389,20 @@ Basics - Part 1 (request logging demo)
    ``slow_trickle_requests(.001)`` is run to simulate a large quick
    burst in traffic
 -  `7:00 <https://asciinema.org/a/101422?t=7:00>`__ is when multiple
-   values are passed in the ``since`` argument of ``find``...
-   ``request_logs.find(count=True, since='5:min, 1:min,   30:sec')``
+   values are passed in the ``since`` argument of ``find``\ …
+   ``request_logs.find(count=True, since='5:min, 1:min, 30:sec')``
 -  `8:37 <https://asciinema.org/a/101422?t=8:37>`__ is when ``get`` and
    ``get_by_position`` methods are used with a variety of arguments to
-   change the structure of what's returned
+   change the structure of what’s returned
 -  `10:33 <https://asciinema.org/a/101422?t=10:33>`__ is when the
    ``redis_helper.ADMIN_TIMEZONE`` is changed at run time from
    ``America/Chicago`` to ``Europe/London``
 -  `11:27 <https://asciinema.org/a/101422?t=11:27>`__ is when ``find``
-   is used with a variety of arguments to change the structure of what's
+   is used with a variety of arguments to change the structure of what’s
    returned
 -  `14:30 <https://asciinema.org/a/101422?t=14:30>`__ is when ``find``
-   is used with multiple search terms and multiple ``since`` values...
-   ``request_logs.find('host:dogs.com,   uri:/breeds', count=True, since='5:min, 1:min, 10:sec')``
+   is used with multiple search terms and multiple ``since`` values…
+   ``request_logs.find('host:dogs.com, uri:/breeds', count=True, since='5:min, 1:min, 10:sec')``
 -  `15:54 <https://asciinema.org/a/101422?t=15:54>`__ is when the
    ``update`` method is used to modify data and change history is
    retrieved with the ``old_data_for_hash_id`` method
@@ -359,16 +412,9 @@ The first demo walks through the following:
 -  creating a virtual environment, installing redis-helper, and
    downloading example files
 
-   ::
-
-       $ python3 -m venv venv
-       $ venv/bin/pip3 install redis-helper ipython
-       $ venv/bin/rh-download-examples
-       $ cat ~/.config/redis-helper/settings.ini
-       $ venv/bin/ipython -i request_logs.py
-
+   ``$ python3 -m venv venv   $ venv/bin/pip3 install redis-helper ipython   $ venv/bin/rh-download-examples   $ cat ~/.config/redis-helper/settings.ini   $ venv/bin/ipython -i request_logs.py``
 -  using the sample ``Collection`` defined in
-   `request\_logs.py <https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py>`__
+   `request_logs.py <https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py>`__
    to
 
    -  show values of some properties on a ``Collection``
