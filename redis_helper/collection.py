@@ -506,6 +506,16 @@ class Collection(object):
             pipe.zrem(key, hash_id)
             return pipe.execute()
 
+    def delete_many(self, *hash_ids, insert_ts=False):
+        """Wrapper to self.delete
+
+        - insert_ts: if True, use score of insert time instead of modify time
+        """
+        pipe = rh.REDIS.pipeline()
+        for hash_id in hash_ids:
+            self.delete(hash_id, pipe, insert_ts)
+        return pipe.execute()[-1]
+
     def delete_to(self, score=None, ts='', tz=None, insert_ts=False):
         """Delete all items with a score (timestamp) between 0 and score
 
