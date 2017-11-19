@@ -3,7 +3,7 @@ import ujson
 import random
 import redis_helper as rh
 import input_helper as ih
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from functools import partial
 from itertools import chain
 from io import StringIO
@@ -967,16 +967,15 @@ class Collection(object):
                 size_stats.append((name, int(ih.decode(num))))
         count_stats.sort(key=lambda x: x[1], reverse=True)
         size_stats.sort(key=lambda x: x[1], reverse=True)
-        results['counts'] = count_stats[:limit]
-        results['sizes'] = size_stats[:limit]
-        results['timestamps'] = []
+        results['counts'] = OrderedDict(count_stats[:limit])
+        results['sizes'] = OrderedDict(size_stats[:limit])
+        results['timestamps'] = OrderedDict()
         newest = rh.zshow(self._find_searches_zset_key, end=3*(limit-1))
         for name, ts in newest:
-            results['timestamps'].append((
-                ih.decode(name),
+            results['timestamps'][ih.decode(name)] = (
                 ts,
                 rh.utc_float_to_pretty(ts, fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE)
-            ))
+            )
         return results
 
     def get_stats(self, limit=5):
@@ -994,19 +993,21 @@ class Collection(object):
             elif _type == 'last_access':
                 access_stats.append((
                     name,
-                    ih.decode(num),
-                    rh.utc_float_to_pretty(ih.decode(num), fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE)
+                    (
+                        ih.decode(num),
+                        rh.utc_float_to_pretty(ih.decode(num), fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE)
+                    )
                 ))
         count_stats.sort(key=lambda x: x[1], reverse=True)
         access_stats.sort(key=lambda x: x[1], reverse=True)
-        results['counts'] = count_stats[:limit]
-        results['timestamps'] = access_stats[:limit]
+        results['counts'] = OrderedDict(count_stats[:limit])
+        results['timestamps'] = OrderedDict(access_stats[:limit])
         field_stats = [
             (ih.decode(name), int(ih.decode(count)))
             for name, count in rh.REDIS.hgetall(self._get_field_stats_hash_key).items()
         ]
         field_stats.sort(key=lambda x: x[1], reverse=True)
-        results['fields'] = field_stats
+        results['fields'] = OrderedDict(field_stats)
         return results
 
 
