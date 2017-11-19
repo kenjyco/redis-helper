@@ -63,6 +63,8 @@ class Collection(object):
         self._ts_zset_key = self._make_key(self._base_key, '_ts')
         self._id_zset_key = self._make_key(self._base_key, '_id')
         self._in_zset_key = self._make_key(self._base_key, '_in')
+        self._get_id_stats_hash_key = self._make_key(self._base_key, '_get_id_stats')
+        self._get_field_stats_hash_key = self._make_key(self._base_key, '_get_field_stats')
         self._find_base_key = self._make_key(self._base_key, '_find')
         self._find_next_id_string_key = self._make_key(self._find_base_key, '_next_id')
         self._find_stats_hash_key = self._make_key(self._find_base_key, '_stats')
@@ -187,6 +189,7 @@ class Collection(object):
         - insert_ts: if True and include_meta is True, return the insert time
           for the '_ts' meta field (instead of modify time)
         """
+        hash_id = ih.decode(hash_id)
         if admin_fmt or ts_fmt or ts_tz:
             include_meta = True
         if item_format:
@@ -220,7 +223,13 @@ class Collection(object):
         except ResponseError:
             data = {}
 
+        # Start creating the 'pipe' for adding get_*_stats
+        pipe = rh.REDIS.pipeline()
+        pipe.hincrby(self._get_id_stats_hash_key, hash_id + '--count', 1)
+        pipe.hset(self._get_id_stats_hash_key, hash_id + '--last_access', self.now_utc_float)
+
         for field in data.keys():
+            pipe.hincrby(self._get_field_stats_hash_key, field, 1)
             if field in self._json_fields:
                 try:
                     data[field] = ujson.loads(data[field])
@@ -237,6 +246,11 @@ class Collection(object):
             data['_ts'] = timestamp_formatter(
                 rh.REDIS.zscore(key, hash_id)
             )
+            for field in META_FIELDS:
+                pipe.hincrby(self._get_field_stats_hash_key, field, 1)
+
+        pipe.execute()
+
         if item_format:
             return item_format.format(**data)
         return data
@@ -965,6 +979,37 @@ class Collection(object):
             ))
         return results
 
+    def get_stats(self, limit=5):
+        """Return summary info about ids and fields accessed by self.get
+
+        - limit: max number of ids to return
+        """
+        count_stats = []
+        access_stats = []
+        results = {}
+        for name, num in rh.REDIS.hgetall(self._get_id_stats_hash_key).items():
+            name, _type = ih.decode(name).split('--')
+            if _type == 'count':
+                count_stats.append((name, int(ih.decode(num))))
+            elif _type == 'last_access':
+                access_stats.append((
+                    name,
+                    ih.decode(num),
+                    rh.utc_float_to_pretty(ih.decode(num), fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE)
+                ))
+        count_stats.sort(key=lambda x: x[1], reverse=True)
+        access_stats.sort(key=lambda x: x[1], reverse=True)
+        results['counts'] = count_stats[:limit]
+        results['timestamps'] = access_stats[:limit]
+        field_stats = [
+            (ih.decode(name), int(ih.decode(count)))
+            for name, count in rh.REDIS.hgetall(self._get_field_stats_hash_key).items()
+        ]
+        field_stats.sort(key=lambda x: x[1], reverse=True)
+        results['fields'] = field_stats
+        return results
+
+
     def clear_find_stats(self):
         """Delete all Redis keys under self._find_base_key"""
         pipe = rh.REDIS.pipeline()
@@ -975,3 +1020,10 @@ class Collection(object):
     def clear_init_stats(self):
         """Delete stats stored in self.__class__.__name__ key"""
         rh.REDIS.delete(self.__class__.__name__)
+
+    def clear_get_stats(self):
+        """Delete stats stored in self._get_id_stats_hash_key & self._get_field_stats_hash_key"""
+        pipe = rh.REDIS.pipeline()
+        pipe.delete(self._get_id_stats_hash_key)
+        pipe.delete(self._get_field_stats_hash_key)
+        pipe.execute()
