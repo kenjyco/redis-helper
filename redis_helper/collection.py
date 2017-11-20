@@ -83,7 +83,10 @@ class Collection(object):
             ', '.join([p for p in _parts if p is not '']),
             ')'
         ])
-        rh.REDIS.hincrby(self.__class__.__name__, self._init_args, 1)
+        pipe = rh.REDIS.pipeline()
+        pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_args', self._init_args)
+        pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size)
+        pipe.execute()
 
         if self.__class__.__name__ != 'Collection':
             item = rh.REDIS.get(self._init_args)
@@ -160,6 +163,8 @@ class Collection(object):
             if val is not None:
                 data[field] = pickle.dumps(val)
         pipe = rh.REDIS.pipeline()
+        pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
+        pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size + 1)
         if self._unique_field:
             pipe.zadd(self._id_zset_key, id_num, unique_val)
         pipe.zadd(self._ts_zset_key, now, key)
@@ -387,24 +392,24 @@ class Collection(object):
     @classmethod
     def select_model(cls):
         """A class method to select previously created model instance"""
+        s = cls.init_stats(20)
         items = [
             {
-                'name': ih.decode(name),
-                'count': ih.from_string(ih.decode(count))
+                'name': name,
+                'size': size
             }
-            for name, count in rh.REDIS.hgetall(cls.__name__).items()
+            for name, size in s['sizes'].items()
         ]
-        items.sort(key=lambda x: x['count'], reverse=True)
         selected = ih.make_selections(
             items,
             prompt='Select the model to be returned',
-            item_format='({count} instances) {name}',
+            item_format='{name} ({size} items)',
             wrap=False
         )
 
         if selected:
             if cls.__name__ == 'Collection':
-                return eval('rh.{}'.format(selected[0]['name']))
+                return eval('rh.{}'.format(s['init_args'][selected[0]['name']]))
 
             pickle_string = rh.REDIS.get(selected[0]['name'])
             if pickle_string:
@@ -515,10 +520,13 @@ class Collection(object):
             pipe.zrem(other_key, unique_val)
         pipe.delete(self._make_key(hash_id, '_changes'))
         pipe.zrem(other_key, hash_id)
+        pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
 
         if execute:
             pipe.zrem(key, hash_id)
-            return pipe.execute()
+            val = pipe.execute()
+            rh.REDIS.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size)
+            return val
 
     def delete_many(self, *hash_ids, insert_ts=False):
         """Wrapper to self.delete
@@ -528,7 +536,9 @@ class Collection(object):
         pipe = rh.REDIS.pipeline()
         for hash_id in hash_ids:
             self.delete(hash_id, pipe, insert_ts)
-        return pipe.execute()[-1]
+        val = pipe.execute()[-1]
+        rh.REDIS.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size)
+        return val
 
     def delete_to(self, score=None, ts='', tz=None, insert_ts=False):
         """Delete all items with a score (timestamp) between 0 and score
@@ -549,7 +559,9 @@ class Collection(object):
         for hash_id in rh.REDIS.zrangebyscore(key, 0, score):
             self.delete(hash_id, pipe, insert_ts)
         pipe.zremrangebyscore(key, 0, score)
-        return pipe.execute()[-1]
+        val = pipe.execute()[-1]
+        rh.REDIS.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size)
+        return val
 
     def update(self, hash_id, **data):
         """Update data at a particular hash_id
@@ -572,6 +584,7 @@ class Collection(object):
         changes_hash_key = self._make_key(hash_id, '_changes')
         old_timestamp = rh.REDIS.zscore(self._ts_zset_key, hash_id)
         pipe = rh.REDIS.pipeline()
+        pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
         for field, old_value in self.get(hash_id, update_fields).items():
             if data[field] != old_value:
                 k = '{}--{}'.format(field, old_timestamp)
@@ -960,7 +973,7 @@ class Collection(object):
         size_stats = []
         results = {}
         for name, num in rh.REDIS.hgetall(self._find_stats_hash_key).items():
-            name, _type = ih.decode(name).split('--')
+            name, _type = ih.decode(name).rsplit('--', 1)
             if _type == 'count':
                 count_stats.append((name, int(ih.decode(num))))
             elif _type == 'last_size':
@@ -978,6 +991,35 @@ class Collection(object):
             )
         return results
 
+    @classmethod
+    def init_stats(cls, limit=5):
+        """Return summary info about last size and update time of Collection items
+
+        - limit: max number of ids to return
+        """
+        size_stats = []
+        update_stats = []
+        results = {'init_args': {}}
+        for key, val in rh.REDIS.hgetall('_REDIS_HELPER_COLLECTION').items():
+            base_key, _type = ih.decode(key).rsplit('--', 1)
+            if _type == 'last_size':
+                size_stats.append((base_key, int(ih.decode(val))))
+            elif _type == 'last_update':
+                update_stats.append((
+                    base_key,
+                    (
+                        ih.decode(val),
+                        rh.utc_float_to_pretty(ih.decode(val), fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE)
+                    )
+                ))
+            elif _type == 'last_args':
+                results['init_args'][base_key] = ih.decode(val)
+        size_stats.sort(key=lambda x: x[1], reverse=True)
+        update_stats.sort(key=lambda x: x[1], reverse=True)
+        results['sizes'] = OrderedDict(size_stats[:limit])
+        results['timestamps'] = OrderedDict(update_stats[:limit])
+        return results
+
     def get_stats(self, limit=5):
         """Return summary info about ids and fields accessed by self.get
 
@@ -987,7 +1029,7 @@ class Collection(object):
         access_stats = []
         results = {}
         for name, num in rh.REDIS.hgetall(self._get_id_stats_hash_key).items():
-            name, _type = ih.decode(name).split('--')
+            name, _type = ih.decode(name).rsplit('--', 1)
             if _type == 'count':
                 count_stats.append((name, int(ih.decode(num))))
             elif _type == 'last_access':
@@ -1010,7 +1052,6 @@ class Collection(object):
         results['fields'] = OrderedDict(field_stats)
         return results
 
-
     def clear_find_stats(self):
         """Delete all Redis keys under self._find_base_key"""
         pipe = rh.REDIS.pipeline()
@@ -1019,8 +1060,11 @@ class Collection(object):
         pipe.execute()
 
     def clear_init_stats(self):
-        """Delete stats stored in self.__class__.__name__ key"""
-        rh.REDIS.delete(self.__class__.__name__)
+        """Delete stats stored in self.__class__.__name__ or _REDIS_HELPER_COLLECTION keys"""
+        pipe = rh.REDIS.pipeline()
+        pipe.delete(self.__class__.__name__)
+        pipe.delete('_REDIS_HELPER_COLLECTION')
+        pipe.execute()
 
     def clear_get_stats(self):
         """Delete stats stored in self._get_id_stats_hash_key & self._get_field_stats_hash_key"""
