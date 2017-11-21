@@ -428,6 +428,11 @@ class Collection(object):
         if models:
             return models[0]
 
+    @classmethod
+    def report_all(cls):
+        """A class method to show some info about the classes"""
+        from pprint import pprint
+        pprint(rh.REDIS.hgetall('_REDIS_HELPER_COLLECTION'))
 
     @property
     def last(self):
