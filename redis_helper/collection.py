@@ -390,7 +390,7 @@ class Collection(object):
         return item
 
     @classmethod
-    def select_model(cls):
+    def select_models(cls):
         """A class method to select previously created model instance"""
         s = cls.init_stats(20)
         items = [
@@ -402,20 +402,28 @@ class Collection(object):
         ]
         selected = ih.make_selections(
             items,
-            prompt='Select the model to be returned',
+            prompt='Select the model(s) to be returned',
             item_format='{name} ({size} items)',
             wrap=False
         )
 
-        if selected:
+        results = []
+        for selection in selected:
             if cls.__name__ == 'Collection':
-                return eval('rh.{}'.format(s['init_args'][selected[0]['name']]))
+                results.append(eval('rh.{}'.format(s['init_args'][selection['name']])))
+            else:
+                pickle_string = rh.REDIS.get(selection['name'])
+                if pickle_string:
+                    results.append(pickle.loads(pickle_string))
+        return results
 
-            pickle_string = rh.REDIS.get(selected[0]['name'])
-            if pickle_string:
-                return pickle.loads(pickle_string)
+    @classmethod
+    def select_model(cls):
+        """A class method to select previously created model instance"""
+        models = cls.select_models()
+        if models:
+            return models[0]
 
-            rh.logger.error('Unable to load model {}'.format(selected[0]['name']))
 
     @property
     def last(self):
