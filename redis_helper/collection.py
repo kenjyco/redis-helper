@@ -26,7 +26,8 @@ class Collection(object):
     - gather count metrics or actual data at a variety of time ranges at once
     """
     def __init__(self, namespace, name, unique_field='', index_fields='',
-                 json_fields='', pickle_fields='', insert_ts=False):
+                 json_fields='', pickle_fields='', insert_ts=False,
+                 list_name=''):
         """Pass in namespace and name
 
         - unique_field: name of the optional unique field
@@ -34,6 +35,7 @@ class Collection(object):
         - json_fields: string of fields that should be serialized as JSON
         - pickle_fields: string of fields with complex/arbitrary structure
         - insert_ts: if True, use an additional index for insert times
+        - list_name: if provided _______________
 
         Separate fields in strings by any of , ; |
         """
@@ -42,6 +44,7 @@ class Collection(object):
         self._json_fields = ih.string_to_set(json_fields)
         self._pickle_fields = ih.string_to_set(pickle_fields)
         self._insert_ts = insert_ts
+        self._list_name = list_name
 
         u = set([unique_field])
         invalid = (
@@ -77,6 +80,7 @@ class Collection(object):
             'json_fields={}'.format(repr(json_fields)) if json_fields else '',
             'pickle_fields={}'.format(repr(pickle_fields)) if pickle_fields else '',
             'insert_ts={}'.format(repr(insert_ts)) if insert_ts else '',
+            'list_name={}'.format(repr(list_name)) if list_name else '',
         ]
         self._init_args = ''.join([
             self.__class__.__name__,
