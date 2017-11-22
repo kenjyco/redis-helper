@@ -182,12 +182,13 @@ class Collection(object):
         pipe.execute()
         return key
 
-    def get(self, hash_id, fields='', include_meta=False,
+    def get(self, hash_ids, fields='', include_meta=False,
             timestamp_formatter=rh.identity, ts_fmt=None, ts_tz=None,
             admin_fmt=False, item_format='', insert_ts=False,
             update_get_stats=True):
         """Wrapper to rh.REDIS.hget/hmget/hgetall
 
+        - hash_ids: string of hash_ids to get data for separated by any of , ; |
         - fields: string of field names to get separated by any of , ; |
         - include_meta: if True include attributes _id and _ts
         - timestamp_formatter: a callable to apply to the _ts timestamp
@@ -199,9 +200,10 @@ class Collection(object):
         - insert_ts: if True and include_meta is True, return the insert time
           for the '_ts' meta field (instead of modify time)
         - update_get_stats: if True update access count and last access time
-          for hash_id and update field access counts for each field in 'fields'
+          for each hash_id and update field access counts for each field in
+          'fields'
         """
-        hash_id = ih.decode(hash_id)
+        hash_ids = ih.string_to_list(ih.decode(hash_ids))
         if admin_fmt or ts_fmt or ts_tz:
             include_meta = True
         if item_format:
@@ -220,56 +222,70 @@ class Collection(object):
                     ts_tz=ts_tz,
                     admin_fmt=admin_fmt
                 )
-        try:
-            if num_fields == 1:
-                field = fields.pop()
-                data = {field: rh.REDIS.hget(hash_id, field)}
-            elif num_fields > 1:
-                data = dict(zip(fields, rh.REDIS.hmget(hash_id, *fields)))
-            else:
-                _data = rh.REDIS.hgetall(hash_id)
-                data = {
-                    ih.decode(k): v
-                    for k, v in _data.items()
-                }
-        except ResponseError:
-            data = {}
+        if include_meta:
+            key = self._ts_zset_key if not insert_ts else self._in_zset_key
 
+        # Define the _get_data func based on number of fields requested
+        if num_fields == 1:
+            field = fields.pop()
+            _get_data = lambda hash_id: {field: rh.REDIS.hget(hash_id, field)}
+        elif num_fields > 1:
+            _get_data = lambda hash_id: dict(zip(fields, rh.REDIS.hmget(hash_id, *fields)))
+        else:
+            _get_data = lambda hash_id: {
+                ih.decode(k): v
+                for k, v in rh.REDIS.hgetall(hash_id).items()
+            }
+
+        results = []
         if update_get_stats:
             # Start creating the 'pipe' for adding get_*_stats
             pipe = rh.REDIS.pipeline()
-            pipe.hincrby(self._get_id_stats_hash_key, hash_id + '--count', 1)
-            pipe.hset(self._get_id_stats_hash_key, hash_id + '--last_access', self.now_utc_float)
 
-        for field in data.keys():
+        for hash_id in hash_ids:
+            try:
+                data = _get_data(hash_id)
+            except ResponseError:
+                data = {}
+
             if update_get_stats:
-                pipe.hincrby(self._get_field_stats_hash_key, field, 1)
-            if field in self._json_fields:
-                try:
-                    data[field] = ujson.loads(data[field])
-                except (ValueError, TypeError):
-                    data[field] = ih.decode((data[field]))
-            elif field in self._pickle_fields:
-                data[field] = pickle.loads(data[field])
-            else:
-                val = ih.decode(data[field])
-                data[field] = ih.from_string(val) if val is not None else None
-        if include_meta:
-            key = self._ts_zset_key if not insert_ts else self._in_zset_key
-            data['_id'] = ih.decode(hash_id)
-            data['_ts'] = timestamp_formatter(
-                rh.REDIS.zscore(key, hash_id)
-            )
-            if update_get_stats:
-                for field in META_FIELDS:
+                pipe.hincrby(self._get_id_stats_hash_key, hash_id + '--count', 1)
+                pipe.hset(self._get_id_stats_hash_key, hash_id + '--last_access', self.now_utc_float)
+
+            for field in data.keys():
+                if update_get_stats:
                     pipe.hincrby(self._get_field_stats_hash_key, field, 1)
+                if field in self._json_fields:
+                    try:
+                        data[field] = ujson.loads(data[field])
+                    except (ValueError, TypeError):
+                        data[field] = ih.decode((data[field]))
+                elif field in self._pickle_fields:
+                    data[field] = pickle.loads(data[field])
+                else:
+                    val = ih.decode(data[field])
+                    data[field] = ih.from_string(val) if val is not None else None
+            if include_meta:
+                data['_id'] = ih.decode(hash_id)
+                data['_ts'] = timestamp_formatter(
+                    rh.REDIS.zscore(key, hash_id)
+                )
+                if update_get_stats:
+                    for field in META_FIELDS:
+                        pipe.hincrby(self._get_field_stats_hash_key, field, 1)
+
+            if item_format:
+                results.append(item_format.format(**data))
+            else:
+                results.append(data)
 
         if update_get_stats:
             pipe.execute()
 
-        if item_format:
-            return item_format.format(**data)
-        return data
+        if len(results) == 1:
+            return results[0]
+        return results
+
 
     def get_hash_id_for_unique_value(self, unique_val):
         """Return the hash_id of the object that has unique_val in _unique_field"""
