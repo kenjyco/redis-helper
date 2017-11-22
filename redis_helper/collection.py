@@ -184,7 +184,8 @@ class Collection(object):
 
     def get(self, hash_id, fields='', include_meta=False,
             timestamp_formatter=rh.identity, ts_fmt=None, ts_tz=None,
-            admin_fmt=False, item_format='', insert_ts=False):
+            admin_fmt=False, item_format='', insert_ts=False,
+            update_get_stats=True):
         """Wrapper to rh.REDIS.hget/hmget/hgetall
 
         - fields: string of field names to get separated by any of , ; |
@@ -197,6 +198,8 @@ class Collection(object):
           a dict)
         - insert_ts: if True and include_meta is True, return the insert time
           for the '_ts' meta field (instead of modify time)
+        - update_get_stats: if True update access count and last access time
+          for hash_id and update field access counts for each field in 'fields'
         """
         hash_id = ih.decode(hash_id)
         if admin_fmt or ts_fmt or ts_tz:
@@ -232,13 +235,15 @@ class Collection(object):
         except ResponseError:
             data = {}
 
-        # Start creating the 'pipe' for adding get_*_stats
-        pipe = rh.REDIS.pipeline()
-        pipe.hincrby(self._get_id_stats_hash_key, hash_id + '--count', 1)
-        pipe.hset(self._get_id_stats_hash_key, hash_id + '--last_access', self.now_utc_float)
+        if update_get_stats:
+            # Start creating the 'pipe' for adding get_*_stats
+            pipe = rh.REDIS.pipeline()
+            pipe.hincrby(self._get_id_stats_hash_key, hash_id + '--count', 1)
+            pipe.hset(self._get_id_stats_hash_key, hash_id + '--last_access', self.now_utc_float)
 
         for field in data.keys():
-            pipe.hincrby(self._get_field_stats_hash_key, field, 1)
+            if update_get_stats:
+                pipe.hincrby(self._get_field_stats_hash_key, field, 1)
             if field in self._json_fields:
                 try:
                     data[field] = ujson.loads(data[field])
@@ -255,10 +260,12 @@ class Collection(object):
             data['_ts'] = timestamp_formatter(
                 rh.REDIS.zscore(key, hash_id)
             )
-            for field in META_FIELDS:
-                pipe.hincrby(self._get_field_stats_hash_key, field, 1)
+            if update_get_stats:
+                for field in META_FIELDS:
+                    pipe.hincrby(self._get_field_stats_hash_key, field, 1)
 
-        pipe.execute()
+        if update_get_stats:
+            pipe.execute()
 
         if item_format:
             return item_format.format(**data)
