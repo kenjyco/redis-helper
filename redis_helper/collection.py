@@ -329,6 +329,8 @@ class Collection(object):
         - insert_ts: if True, use position of insert time instead of modify time
         """
         data = {}
+        if 'update_get_stats' not in kwargs:
+            kwargs['update_get_stats'] = False
         insert_ts = kwargs.get('insert_ts', False)
         key = self._ts_zset_key if not insert_ts else self._in_zset_key
         x = rh.REDIS.zrange(key, pos, pos, withscores=True)
@@ -348,6 +350,8 @@ class Collection(object):
         _stop = stop or -1
         if stop is not None:
             _stop -= 1
+        if 'update_get_stats' not in kwargs:
+            kwargs['update_get_stats'] = False
         insert_ts = kwargs.get('insert_ts', False)
         key = self._ts_zset_key if not insert_ts else self._in_zset_key
         return [
@@ -381,6 +385,8 @@ class Collection(object):
             ts_tz=ts_tz,
             admin_fmt=admin_fmt
         )
+        if 'update_get_stats' not in get_kwargs:
+            get_kwargs['update_get_stats'] = False
         get_kwargs['timestamp_formatter'] = timestamp_formatter
         if admin_fmt or ts_fmt or ts_tz:
             get_kwargs['include_meta'] = True
