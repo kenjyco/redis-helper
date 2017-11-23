@@ -497,8 +497,18 @@ class Collection(object):
         pprint(self.keyspace, s)
         s.write('\nindex_field_info:\n ')
         pprint(self.index_field_info(), s)
-        s.write('\nrandom:\n ')
-        pprint(self.random(), s)
+        s.write('\nmost fetched items:\n ')
+        most_fetched = list(self.get_stats(10)['counts'].items())
+        pprint(most_fetched, s)
+        if most_fetched:
+            s.write('\ntop:\n ')
+            top = self.get(
+                most_fetched[0][0],
+                include_meta=True,
+                admin_fmt=True,
+                update_get_stats=False
+            ),
+            pprint(top, s)
         return s.getvalue()
 
     @property
