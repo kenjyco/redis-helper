@@ -3,6 +3,7 @@ import ujson
 import random
 import redis_helper as rh
 import input_helper as ih
+import dt_helper as dh
 from collections import defaultdict, OrderedDict
 from functools import partial
 from itertools import chain
@@ -217,7 +218,7 @@ class Collection(object):
         num_fields = len(fields)
         if timestamp_formatter == rh.identity and include_meta:
             if ts_fmt or ts_tz or admin_fmt:
-                timestamp_formatter = rh.get_timestamp_formatter_from_args(
+                timestamp_formatter = dh.get_timestamp_formatter_from_args(
                     ts_fmt=ts_fmt,
                     ts_tz=ts_tz,
                     admin_fmt=admin_fmt
@@ -372,15 +373,15 @@ class Collection(object):
         - ts_tz: a timezone to convert the timestamp to before formatting
         - admin_fmt: if True, use format and timezone defined in settings file
         - start_ts: timestamps with form between YYYY and YYYY-MM-DD HH:MM:SS.f
-          (in the timezone specified in ts_tz or ADMIN_TIMEZONE)
+          (in the timezone specified in ts_tz or dh.ADMIN_TIMEZONE)
         - end_ts: timestamps with form between YYYY and YYYY-MM-DD HH:MM:SS.f
-          (in the timezone specified in ts_tz or ADMIN_TIMEZONE)
+          (in the timezone specified in ts_tz or dh.ADMIN_TIMEZONE)
         - since: 'num:unit' strings (i.e. 15:seconds, 1.5:weeks, etc)
         - until: 'num:unit' strings (i.e. 15:seconds, 1.5:weeks, etc)
         - get_kwargs: dict of keyword arguments to pass to self.get
         """
         item = {}
-        timestamp_formatter = rh.get_timestamp_formatter_from_args(
+        timestamp_formatter = dh.get_timestamp_formatter_from_args(
             ts_fmt=ts_fmt,
             ts_tz=ts_tz,
             admin_fmt=admin_fmt
@@ -394,7 +395,7 @@ class Collection(object):
             insert_ts = get_kwargs.get('insert_ts', False)
             now = self.now_utc_float
             result_key, result_key_is_tmp = self._redis_zset_from_terms(terms, insert_ts)
-            time_ranges = rh.get_time_ranges_and_args(
+            time_ranges = dh.get_time_ranges_and_args(
                 tz=ts_tz,
                 now=now,
                 start=start,
@@ -513,11 +514,11 @@ class Collection(object):
 
     @property
     def now_pretty(self):
-        return rh.utc_float_to_pretty()
+        return dh.utc_float_to_pretty()
 
     @property
     def now_utc_float(self):
-        return float(rh.utc_now_float_string())
+        return float(dh.utc_now_float_string())
 
     @property
     def keyspace(self):
@@ -601,13 +602,13 @@ class Collection(object):
 
         - score: a utc_float
         - ts: a timestamp with form between YYYY and YYYY-MM-DD HH:MM:SS.f
-          (in the timezone specified in tz or ADMIN_TIMEZONE)
+          (in the timezone specified in tz or dh.ADMIN_TIMEZONE)
         - tz: a timezone
         - insert_ts: if True, use score of insert time instead of modify time
         """
         if ts:
-            tz = tz or rh.ADMIN_TIMEZONE
-            score = float(rh.date_string_to_utc_float_string(ts, tz))
+            tz = tz or dh.ADMIN_TIMEZONE
+            score = float(dh.date_string_to_utc_float_string(ts, tz))
         if score is None:
             return
         key = self._ts_zset_key if not insert_ts else self._in_zset_key
@@ -677,8 +678,8 @@ class Collection(object):
             field, timestamp = ih.decode(name).split('--')
             results.append({
                 '_ts_raw': timestamp,
-                '_ts_admin': rh.utc_float_to_pretty(
-                    timestamp, fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE
+                '_ts_admin': dh.utc_float_to_pretty(
+                    timestamp, fmt=dh.ADMIN_DATE_FMT, timezone=dh.ADMIN_TIMEZONE
                 ),
                 'field': field,
                 'value': ih.decode(value),
@@ -828,9 +829,9 @@ class Collection(object):
         - ts_tz: a timezone to convert the timestamp to before formatting
         - admin_fmt: if True, use format and timezone defined in settings file
         - start_ts: timestamps with form between YYYY and YYYY-MM-DD HH:MM:SS.f
-          (in the timezone specified in ts_tz or ADMIN_TIMEZONE)
+          (in the timezone specified in ts_tz or dh.ADMIN_TIMEZONE)
         - end_ts: timestamps with form between YYYY and YYYY-MM-DD HH:MM:SS.f
-          (in the timezone specified in ts_tz or ADMIN_TIMEZONE)
+          (in the timezone specified in ts_tz or dh.ADMIN_TIMEZONE)
         - since: 'num:unit' strings (i.e. 15:seconds, 1.5:weeks, etc)
         - until: 'num:unit' strings (i.e. 15:seconds, 1.5:weeks, etc)
         - include_meta: if True (and 'count' is False), include attributes
@@ -857,7 +858,7 @@ class Collection(object):
         results = {}
         now = self.now_utc_float
         result_key, result_key_is_tmp = self._redis_zset_from_terms(terms, insert_ts)
-        time_ranges = rh.get_time_ranges_and_args(
+        time_ranges = dh.get_time_ranges_and_args(
             tz=ts_tz,
             now=now,
             start=start,
@@ -867,7 +868,7 @@ class Collection(object):
             since=since,
             until=until
         )
-        timestamp_formatter = rh.get_timestamp_formatter_from_args(
+        timestamp_formatter = dh.get_timestamp_formatter_from_args(
             ts_fmt=ts_fmt,
             ts_tz=ts_tz,
             admin_fmt=admin_fmt
@@ -1043,7 +1044,7 @@ class Collection(object):
         for name, ts in newest:
             results['timestamps'][ih.decode(name)] = (
                 ts,
-                rh.utc_float_to_pretty(ts, fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE)
+                dh.utc_float_to_pretty(ts, fmt=dh.ADMIN_DATE_FMT, timezone=dh.ADMIN_TIMEZONE)
             )
         return results
 
@@ -1065,7 +1066,7 @@ class Collection(object):
                     base_key,
                     (
                         ih.decode(val),
-                        rh.utc_float_to_pretty(ih.decode(val), fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE)
+                        dh.utc_float_to_pretty(ih.decode(val), fmt=dh.ADMIN_DATE_FMT, timezone=dh.ADMIN_TIMEZONE)
                     )
                 ))
             elif _type == 'last_args':
@@ -1093,7 +1094,7 @@ class Collection(object):
                     name,
                     (
                         ih.decode(num),
-                        rh.utc_float_to_pretty(ih.decode(num), fmt=rh.ADMIN_DATE_FMT, timezone=rh.ADMIN_TIMEZONE)
+                        dh.utc_float_to_pretty(ih.decode(num), fmt=dh.ADMIN_DATE_FMT, timezone=dh.ADMIN_TIMEZONE)
                     )
                 ))
         count_stats.sort(key=lambda x: x[1], reverse=True)
