@@ -70,7 +70,7 @@ class TestCollection:
         _coll2.clear_keyspace()
         _coll3.clear_keyspace()
         _coll4.clear_keyspace()
-        rh.REDIS.delete('Collection')
+        rh.REDIS.delete('_REDIS_HELPER_COLLECTION')
 
     def test_add_and_get(self, coll1):
         data = generate_coll1_data()
