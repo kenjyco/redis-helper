@@ -4,6 +4,8 @@ ujson==1.35
 click>=6.0
 pytz
 input-helper
+settings-helper
+dt-helper
 
 # For development
 ipython==5.1.0

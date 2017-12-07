@@ -24,6 +24,8 @@ setup(
         'click>=6.0',
         'pytz',
         'input-helper',
+        'settings-helper',
+        'dt-helper',
     ],
     include_package_data=True,
     package_dir={'': '.'},
