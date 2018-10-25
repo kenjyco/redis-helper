@@ -8,9 +8,14 @@ def main():
     from IPython import embed
     import redis_helper as rh
     import input_helper as ih
-    model, *other_models = rh.Collection.select_models()
+    try:
+        model, *other_models = rh.Collection.select_models()
+    except ValueError:
+        model = None
+        other_models = None
     print('\nimport redis_helper as rh\nimport input_helper as ih\n')
-    print('model=rh.{}\n'.format(repr(model)))
+    if model:
+        print('model=rh.{}\n'.format(repr(model)))
     if other_models:
         print('# Check "other_models" for the {} other model(s) you selected\n\n'.format(
             len(other_models)
