@@ -5,7 +5,12 @@ from pprint import pprint
 @click.command()
 def main():
     """Interactively select a Collection model and start ipython shell"""
-    from IPython import embed
+    try:
+        from IPython import embed
+    except ImportError:
+        print('Could not find ipython. Try to install with: pip3 install ipython')
+        return
+
     import redis_helper as rh
     import input_helper as ih
     try:
