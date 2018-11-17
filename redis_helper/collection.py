@@ -4,6 +4,7 @@ import random
 import redis_helper as rh
 import input_helper as ih
 import dt_helper as dh
+from time import sleep
 from collections import defaultdict, OrderedDict
 from functools import partial
 from itertools import chain
@@ -712,6 +713,48 @@ class Collection(object):
             pipe.zadd(self._ts_zset_key, now, hash_id)
             pipe.execute()
         return changes
+
+    def reindex(self):
+        """Re-index whatever data is currently in the collection
+
+        This should only have to be done if new field names are added to
+        'index_fields' (via modifying init args to define the Collection instance)
+        """
+        if self.is_locked:
+            return
+        self._lock()
+
+        pipe = rh.REDIS.pipeline()
+        for index_base_key in self._index_base_keys.values():
+            for key in rh.REDIS.scan_iter('{}*'.format(index_base_key)):
+                pipe.delete(ih.decode(key))
+        pipe.execute()
+
+        pipe = rh.REDIS.pipeline()
+        base_key_counts = {}
+        for hash_id in rh.zshow(self._ts_zset_key, withscores=False):
+            hash_id = ih.decode(hash_id)
+            data = self.get(hash_id)
+
+            for index_field, base_key in self._index_base_keys.items():
+                index_field_data = data.get(index_field)
+                key_name = self._make_key(base_key, index_field_data)
+                pipe.sadd(key_name, hash_id)
+                try:
+                    base_key_counts[base_key][index_field_data] += 1
+                except KeyError:
+                    try:
+                        base_key_counts[base_key][index_field_data] = 1
+                    except KeyError:
+                        base_key_counts[base_key] = {}
+                        base_key_counts[base_key][index_field_data] = 1
+
+        for base_key, count_dict in base_key_counts.items():
+            for count_name, value in count_dict.items():
+                pipe.zadd(base_key, value, count_name)
+
+        pipe.execute()
+        self._unlock()
 
     def old_data_for_hash_id(self, hash_id):
         """Return info about fields that have been modified on the hash_id"""
