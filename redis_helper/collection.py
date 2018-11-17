@@ -680,6 +680,7 @@ class Collection(object):
             return
 
         self.wait_for_unlock()
+        changes = []
         now = self.now_utc_float
         update_fields = ','.join(data.keys())
         changes_hash_key = self._make_key(hash_id, '_changes')
@@ -687,7 +688,8 @@ class Collection(object):
         pipe = rh.REDIS.pipeline()
         pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
         for field, old_value in self.get(hash_id, update_fields).items():
-            if data[field] != old_value:
+            if ih.from_string(data[field]) != old_value:
+                changes.append('{} {}: {} | {}'.format(hash_id, field, old_value, data[field]))
                 k = '{}--{}'.format(field, old_timestamp)
                 if old_value is not None:
                     pipe.hset(changes_hash_key, k, old_value)
@@ -708,8 +710,8 @@ class Collection(object):
         if data:
             pipe.hmset(hash_id, data)
             pipe.zadd(self._ts_zset_key, now, hash_id)
-        pipe.execute()
-        return hash_id
+            pipe.execute()
+        return changes
 
     def old_data_for_hash_id(self, hash_id):
         """Return info about fields that have been modified on the hash_id"""
