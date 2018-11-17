@@ -57,6 +57,14 @@ class Collection(object):
             .union(self._pickle_fields.intersection(u))
         )
         assert invalid == set(), 'field(s) used in too many places: {}'.format(invalid)
+        invalid = (
+            META_FIELDS.intersection(
+                index_fields_set.union(self._json_fields)
+                .union(self._pickle_fields)
+                .union(u)
+            )
+        )
+        assert invalid == set(), '{} not allowed to be saved or updated'.format(invalid)
 
         self._base_key = self._make_key(namespace, name)
         self._index_base_keys = {
@@ -146,6 +154,10 @@ class Collection(object):
         in the data and there must not be an item in the collection with the
         same value for that field
         """
+        for mf in META_FIELDS:
+            assert mf not in data, (
+                '{} is a meta field that cannot be saved or updated'.format(repr(mf))
+            )
         if self._unique_field:
             unique_val = data.get(self._unique_field)
             assert unique_val is not None, (
@@ -628,6 +640,10 @@ class Collection(object):
         assert hash_id.startswith(self._base_key), (
             '{} does not start with {}'.format(repr(hash_id), repr(self._base_key))
         )
+        for mf in META_FIELDS:
+            assert mf not in data, (
+                '{} is a meta field that cannot be saved or updated'.format(repr(mf))
+            )
         if self._unique_field:
             assert self._unique_field not in data, (
                 '{} is the unique field and cannot be updated'.format(repr(self._unique_field))
