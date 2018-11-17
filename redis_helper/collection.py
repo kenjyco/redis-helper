@@ -81,6 +81,7 @@ class Collection(object):
         self._find_next_id_string_key = self._make_key(self._find_base_key, '_next_id')
         self._find_stats_hash_key = self._make_key(self._find_base_key, '_stats')
         self._find_searches_zset_key = self._make_key(self._find_base_key, '_searches')
+        self._lock_string_key = self._make_key(self._find_base_key, '_LOCK')
 
         _parts = [
             '({}, {}'.format(repr(namespace), repr(name)),
@@ -147,6 +148,30 @@ class Collection(object):
     def _get_next_find_key(self):
         return self._get_next_key(self._find_next_id_string_key, self._find_base_key)
 
+    def _lock(self):
+        """Lock the collection from being modified"""
+        rh.REDIS.set(self._lock_string_key, 'True')
+
+    def _unlock(self):
+        """Unlock the collection and allow modifications"""
+        rh.REDIS.set(self._lock_string_key, 'False')
+
+    @property
+    def is_locked(self):
+        """Return True if the collection is locked"""
+        return True == ih.from_string(ih.decode(rh.REDIS.get(self._lock_string_key)))
+
+    def wait_for_unlock(self, sleeptime=.5):
+        """Don't return until the collection is unlocked; total sleep time returned
+
+        - sleeptime: amount of time to sleep between checking the lock
+        """
+        total_sleep = 0
+        while self.is_locked == True:
+            total_sleep += sleeptime
+            sleep(sleeptime)
+        return total_sleep
+
     def add(self, **data):
         """Add all fields and values in data to the collection
 
@@ -168,6 +193,7 @@ class Collection(object):
                 '{}={} already exists'.format(self._unique_field, repr(unique_val))
             )
 
+        self.wait_for_unlock()
         now = self.now_utc_float
         key = self._get_next_key(self._next_id_string_key, self._base_key)
         id_num = int(key.split(':')[-1])
@@ -576,6 +602,7 @@ class Collection(object):
             pipe = rh.REDIS.pipeline()
             execute = True
 
+        self.wait_for_unlock()
         pipe.delete(hash_id)
         index_fields = ','.join(self._index_base_keys.keys())
         if index_fields:
@@ -652,6 +679,7 @@ class Collection(object):
         if score is None or data == {}:
             return
 
+        self.wait_for_unlock()
         now = self.now_utc_float
         update_fields = ','.join(data.keys())
         changes_hash_key = self._make_key(hash_id, '_changes')
