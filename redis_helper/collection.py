@@ -132,6 +132,18 @@ class Collection(object):
         else:
             return {}
 
+    def __iter__(self):
+        self._i = 0
+        return self
+
+    def __next__(self):
+        i = self._i
+        if i < self.size:
+            self._i += 1
+            return self.get_by_position(i, include_meta=True)
+        else:
+            raise StopIteration
+
     def _make_key(self, *parts):
         """Join the string parts together, separated by colon(:)"""
         return ':'.join([str(part) for part in parts])
