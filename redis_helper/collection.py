@@ -115,18 +115,19 @@ class Collection(object):
         return self.size
 
     def __getitem__(self, i):
-        if type(i) == int:
+        _type_i = type(i)
+        if _type_i == int:
             return self.get_by_position(i, include_meta=True)
-        elif type(i) == str and i.startswith(self._base_key):
+        elif _type_i == str and i.startswith(self._base_key):
             return self.get(i, include_meta=True)
-        elif type(i) == str and self._unique_field and i:
+        elif _type_i == str and self._unique_field and i:
             val = self.get_by_unique_value(i, include_meta=True)
             if not val:
                 return self.random(i, include_meta=True)
             return val
-        elif type(i) == str and i:
+        elif _type_i == str and i:
             return self.random(i, include_meta=True)
-        elif type(i) == slice:
+        elif _type_i == slice:
             return self.get_by_slice(i.start, i.stop, include_meta=True)
         else:
             return {}
