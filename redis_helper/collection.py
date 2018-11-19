@@ -801,6 +801,10 @@ class Collection(object):
             for val in rh.REDIS.zrevrange(self._id_zset_key, start=0, end=limit-1)
         ]
 
+    def all_unique_values(self):
+        """Return list of all unique values"""
+        return self.recent_unique_values(limit=self.size)
+
     def top_values_for_index(self, index_name, limit=10):
         """Return a list of tuples containing top values and counts for 'index_name'
 
