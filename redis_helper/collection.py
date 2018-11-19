@@ -477,7 +477,7 @@ class Collection(object):
 
     @classmethod
     def select_models(cls):
-        """A class method to select previously created model instance"""
+        """A class method to select previously created model instance(s)"""
         s = cls.init_stats(20)
         items = [
             {
