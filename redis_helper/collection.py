@@ -609,7 +609,15 @@ class Collection(object):
             other_key = self._in_zset_key
         score = rh.REDIS.zscore(key, hash_id)
         if score is None:
-            return
+            # Cleanup things in self._id_zset_key if there is a unique_field
+            result = None
+            if self._unique_field:
+                number = int(hash_id.split(':')[-1])
+                unique_vals = rh.REDIS.zrangebyscore(self._id_zset_key, number, number)
+                if unique_vals:
+                    unique_val = unique_vals[0]
+                    result = rh.REDIS.zrem(self._id_zset_key, unique_val)
+            return result
         if pipe is not None:
             execute = False
         else:
@@ -628,6 +636,7 @@ class Collection(object):
             unique_val = self.get(hash_id, self._unique_field)[self._unique_field]
             pipe.zrem(key, unique_val)
             pipe.zrem(other_key, unique_val)
+            pipe.zrem(self._id_zset_key, unique_val)
         pipe.delete(self._make_key(hash_id, '_changes'))
         pipe.zrem(other_key, hash_id)
         pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
