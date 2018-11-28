@@ -476,6 +476,31 @@ class Collection(object):
         return item
 
     @classmethod
+    def get_model(cls, base_key=None, init_args=None):
+        """A class method to return a Collection object by it's base_key
+
+        - base_key: the name of a base_key (i.e. "namespace:name")
+        - init_args: the last init args used to create particular Collection
+        """
+        assert base_key or init_args, 'Must supply base_key or init_args'
+        assert not base_key or not init_args, 'Cannot supply both base_key and init_args'
+        obj = None
+        if cls.__name__ != 'Collection':
+            key = cls.__name__
+        else:
+            key = '_REDIS_HELPER_COLLECTION'
+        if base_key:
+            init_args = ih.decode(rh.REDIS.hget(key, base_key + '--last_args'))
+
+        if not init_args:
+            return
+        elif key == '_REDIS_HELPER_COLLECTION':
+            obj = eval('rh.' + init_args)
+        else:
+            obj = pickle.loads(init_args)
+        return obj
+
+    @classmethod
     def select_models(cls):
         """A class method to select previously created model instance(s)"""
         s = cls.init_stats(20)
@@ -493,15 +518,10 @@ class Collection(object):
             wrap=False
         )
 
-        results = []
-        for selection in selected:
-            if cls.__name__ == 'Collection':
-                results.append(eval('rh.{}'.format(s['init_args'][selection['name']])))
-            else:
-                pickle_string = rh.REDIS.get(selection['name'])
-                if pickle_string:
-                    results.append(pickle.loads(pickle_string))
-        return results
+        return [
+            cls.get_model(selection['name'])
+            for selection in selected
+        ]
 
     @classmethod
     def select_model(cls):
