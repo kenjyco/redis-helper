@@ -30,6 +30,7 @@ class Collection(object):
     """
     def __init__(self, namespace, name, unique_field='', index_fields='',
                  json_fields='', pickle_fields='', expected_fields='',
+                 reference_fields='',
                  insert_ts=False, list_name='', **kwargs):
         """Pass in namespace and name
 
@@ -38,6 +39,8 @@ class Collection(object):
         - json_fields: string of fields that should be serialized as JSON
         - pickle_fields: string of fields with complex/arbitrary structure
         - expected_fields: string of fields that are likely to be used
+        - reference_fields: string of field--base_key combos for fields that
+          correspond to the unique_field of another collection
         - insert_ts: if True, use an additional index for insert times
         - list_name: if provided _______________
         - kwargs: any other kwargs passed in
@@ -51,9 +54,11 @@ class Collection(object):
         self._json_fields = ih.string_to_set(json_fields)
         self._pickle_fields = ih.string_to_set(pickle_fields)
         self._expected_fields = ih.string_to_set(expected_fields)
+        self._reference_fields = ih.string_to_set(reference_fields)
         self._insert_ts = insert_ts
         self._list_name = list_name
         self.field_rx_dict = {}
+        self.field_reference_dict = {}
 
         u = set([unique_field])
         invalid = (
@@ -91,6 +96,24 @@ class Collection(object):
         self._find_searches_zset_key = self._make_key(self._find_base_key, '_searches')
         self._lock_string_key = self._make_key(self._find_base_key, '_LOCK')
 
+        ref_errors = []
+        for f in self._reference_fields:
+            field, collection_name = f.rsplit('--', 1)
+            model = self.get_model(collection_name)
+            if model is None:
+                ref_errors.append(
+                    'Collection {} does not exist'.format(repr(collection_name))
+                )
+                continue
+            if not model._unique_field:
+                ref_errors.append(
+                    'Collection {} does not have a unique_field'.format(repr(collection_name))
+                )
+                continue
+            self.field_reference_dict[field] = model
+        if ref_errors:
+            raise Exception('Reference field errors: ' + repr(ref_errors))
+
         _parts = [
             '({}, {}'.format(repr(namespace), repr(name)),
             'unique_field={}'.format(repr(unique_field)) if unique_field else '',
@@ -98,6 +121,7 @@ class Collection(object):
             'json_fields={}'.format(repr(json_fields)) if json_fields else '',
             'pickle_fields={}'.format(repr(pickle_fields)) if pickle_fields else '',
             'expected_fields={}'.format(repr(expected_fields)) if expected_fields else '',
+            'reference_fields={}'.format(repr(reference_fields)) if reference_fields else '',
             'insert_ts={}'.format(repr(insert_ts)) if insert_ts else '',
             'list_name={}'.format(repr(list_name)) if list_name else '',
         ]
@@ -254,7 +278,7 @@ class Collection(object):
     def get(self, hash_ids, fields='', include_meta=False,
             timestamp_formatter=rh.identity, ts_fmt=None, ts_tz=None,
             admin_fmt=False, item_format='', insert_ts=False,
-            update_get_stats=True):
+            load_ref_data=False, update_get_stats=True):
         """Wrapper to rh.REDIS.hget/hmget/hgetall
 
         - hash_ids: string of hash_ids to get data for separated by any of , ; |
@@ -268,6 +292,8 @@ class Collection(object):
           a dict)
         - insert_ts: if True and include_meta is True, return the insert time
           for the '_ts' meta field (instead of modify time)
+        - load_ref_data: if True, also load info from any collections specified
+          in init reference_fields that also appears in fields
         - update_get_stats: if True update access count and last access time
           for each hash_id and update field access counts for each field in
           'fields'
@@ -346,6 +372,12 @@ class Collection(object):
             if item_format:
                 results.append(item_format.format(**data))
             else:
+                if load_ref_data:
+                    for field, collection in self.field_reference_dict.items():
+                        if field in data:
+                            _ref_field_data = collection[data[field]]
+                            if _ref_field_data:
+                                data[field] = _ref_field_data
                 results.append(data)
 
         if update_get_stats:
@@ -365,7 +397,8 @@ class Collection(object):
 
     def get_by_unique_value(self, unique_val, fields='', include_meta=False,
                             timestamp_formatter=rh.identity, ts_fmt=None,
-                            ts_tz=None, admin_fmt=False, item_format=''):
+                            ts_tz=None, admin_fmt=False, item_format='',
+                            load_ref_data=False):
         """Wrapper to self.get
 
         - fields: string of field names to get separated by any of , ; |
@@ -376,6 +409,8 @@ class Collection(object):
         - admin_fmt: if True, use format and timezone defined in settings file
         - item_format: format string for each item (return a string instead of
           a dict)
+        - load_ref_data: if True, also load info from any collections specified
+          in init reference_fields that also appears in fields
         """
         hash_id = self.get_hash_id_for_unique_value(unique_val)
         data = {}
@@ -388,7 +423,8 @@ class Collection(object):
                 ts_fmt=ts_fmt,
                 ts_tz=ts_tz,
                 admin_fmt=admin_fmt,
-                item_format=item_format
+                item_format=item_format,
+                load_ref_data=load_ref_data
             )
         return data
 
@@ -973,7 +1009,7 @@ class Collection(object):
              get_fields='', all_fields=False, count=False, ts_fmt=None,
              ts_tz=None, admin_fmt=False, start_ts='', end_ts='', since='',
              until='', include_meta=True, item_format='', insert_ts=False,
-             post_fetch_sort_key='', sort_key_default_val=''):
+             load_ref_data=False, post_fetch_sort_key='', sort_key_default_val=''):
         """Return a list of dicts (or dict of list of dicts) that match all terms
 
         Multiple values in (terms, get_fields, start_ts, end_ts, since, until)
@@ -1001,6 +1037,8 @@ class Collection(object):
           _id, _ts, and _pos in the results
         - item_format: format string for each item
         - insert_ts: if True, use score of insert time instead of modify time
+        - load_ref_data: if True, update every result with info from any
+          collections specified in reference_fields that also appears in get_fields
         - post_fetch_sort_key: key of data to sort results by right before returning
             - no effect if 'item_format' is specified
         - sort_key_default_val: default value to use when sort key does not exist
@@ -1073,6 +1111,7 @@ class Collection(object):
                             include_meta=include_meta,
                             timestamp_formatter=timestamp_formatter,
                             item_format=item_format,
+                            load_ref_data=load_ref_data,
                         )
                         if include_meta and not item_format:
                             d['_pos'] = i
@@ -1083,6 +1122,7 @@ class Collection(object):
                             include_meta=include_meta,
                             timestamp_formatter=timestamp_formatter,
                             item_format=item_format,
+                            load_ref_data=load_ref_data,
                         )
                         if include_meta and not item_format:
                             d['_pos'] = i
