@@ -1,6 +1,7 @@
 import pickle
 import ujson
 import random
+import re
 import redis_helper as rh
 import input_helper as ih
 import dt_helper as dh
@@ -28,16 +29,20 @@ class Collection(object):
     - gather count metrics or actual data at a variety of time ranges at once
     """
     def __init__(self, namespace, name, unique_field='', index_fields='',
-                 json_fields='', pickle_fields='', insert_ts=False,
-                 list_name=''):
+                 json_fields='', pickle_fields='', expected_fields='',
+                 insert_ts=False, list_name='', **kwargs):
         """Pass in namespace and name
 
         - unique_field: name of the optional unique field
         - index_fields: string of fields that should be indexed
         - json_fields: string of fields that should be serialized as JSON
         - pickle_fields: string of fields with complex/arbitrary structure
+        - expected_fields: string of fields that are likely to be used
         - insert_ts: if True, use an additional index for insert times
         - list_name: if provided _______________
+        - kwargs: any other kwargs passed in
+            - rx_{field}: a regular expression used to validate the field
+              before add/update
 
         Separate fields in strings by any of , ; |
         """
@@ -45,8 +50,10 @@ class Collection(object):
         index_fields_set = ih.string_to_set(index_fields)
         self._json_fields = ih.string_to_set(json_fields)
         self._pickle_fields = ih.string_to_set(pickle_fields)
+        self._expected_fields = ih.string_to_set(expected_fields)
         self._insert_ts = insert_ts
         self._list_name = list_name
+        self.field_rx_dict = {}
 
         u = set([unique_field])
         invalid = (
@@ -90,9 +97,15 @@ class Collection(object):
             'index_fields={}'.format(repr(index_fields)) if index_fields else '',
             'json_fields={}'.format(repr(json_fields)) if json_fields else '',
             'pickle_fields={}'.format(repr(pickle_fields)) if pickle_fields else '',
+            'expected_fields={}'.format(repr(expected_fields)) if expected_fields else '',
             'insert_ts={}'.format(repr(insert_ts)) if insert_ts else '',
             'list_name={}'.format(repr(list_name)) if list_name else '',
         ]
+        for k, v in sorted(kwargs.items()):
+            if k.startswith('rx_'):
+                self.field_rx_dict[k[3:]] = re.compile('^{}$'.format(v))
+            _parts.append('{}={}'.format(k, repr(v)))
+
         self._init_args = ''.join([
             self.__class__.__name__,
             ', '.join([p for p in _parts if p is not '']),
@@ -206,6 +219,9 @@ class Collection(object):
             assert score is None, (
                 '{}={} already exists'.format(self._unique_field, repr(unique_val))
             )
+        errors = self.validate(**data)
+        if errors:
+            raise Exception('Validation errors: ' + repr(errors))
 
         self.wait_for_unlock()
         now = self.now_utc_float
@@ -721,6 +737,9 @@ class Collection(object):
         score = rh.REDIS.zscore(self._ts_zset_key, hash_id)
         if score is None or data == {}:
             return
+        errors = self.validate(**data)
+        if errors:
+            raise Exception('Validation errors: ' + repr(errors))
 
         self.wait_for_unlock()
         changes = []
@@ -755,6 +774,15 @@ class Collection(object):
             pipe.zadd(self._ts_zset_key, now, hash_id)
             pipe.execute()
         return changes
+
+    def validate(self, **data):
+        """Validate all fields in data that have a regex; Return list of errors"""
+        errors = []
+        for field, value in data.items():
+            if field in self.field_rx_dict:
+                if not self.field_rx_dict[field].match(value):
+                    errors.append((field, value, self.field_rx_dict[field].pattern))
+        return errors
 
     def reindex(self):
         """Re-index whatever data is currently in the collection
