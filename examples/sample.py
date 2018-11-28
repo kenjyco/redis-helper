@@ -7,5 +7,8 @@ sample = rh.Collection(
     unique_field='name',
     index_fields='status',
     json_fields='data',
+    rx_name='\S{4,6}',
+    rx_status='(active|inactive|cancelled)',
+    rx_aws='[a-z]+\-[0-9a-f]+',
     insert_ts=True
 )
