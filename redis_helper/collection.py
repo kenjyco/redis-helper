@@ -825,6 +825,8 @@ class Collection(object):
 
         This should only have to be done if new field names are added to
         'index_fields' (via modifying init args to define the Collection instance)
+
+        This should also be run if changing the value of the insert_ts init arg
         """
         if self.is_locked:
             return
@@ -859,7 +861,19 @@ class Collection(object):
             for count_name, value in count_dict.items():
                 pipe.zadd(base_key, value, count_name)
 
+        if not self._insert_ts:
+            pipe.delete(self._in_zset_key)
+
         pipe.execute()
+
+        if self._insert_ts:
+            pipe = rh.REDIS.pipeline()
+            has_insert_ts = set(rh.zshow(self._in_zset_key, withscores=False))
+            for hash_id, float_string in rh.zshow(self._ts_zset_key):
+                if hash_id not in has_insert_ts:
+                    pipe.zadd(self._in_zset_key, float_string, ih.decode(hash_id))
+            pipe.execute()
+
         self._unlock()
 
     def old_data_for_hash_id(self, hash_id):
