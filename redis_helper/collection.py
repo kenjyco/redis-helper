@@ -49,6 +49,8 @@ class Collection(object):
 
         Separate fields in strings by any of , ; |
         """
+        self._namespace = namespace
+        self._name = name
         self._unique_field = unique_field
         index_fields_set = ih.string_to_set(index_fields)
         self._json_fields = ih.string_to_set(json_fields)
@@ -612,6 +614,16 @@ class Collection(object):
     def size(self):
         """Return cardinality of self._ts_zset_key (number of items in the zset)"""
         return rh.REDIS.zcard(self._ts_zset_key)
+
+    @property
+    def name(self):
+        """Return the name of the collection"""
+        return self._name
+
+    @property
+    def namespace(self):
+        """Return the namespace of the collection"""
+        return self._namespace
 
     @property
     def info(self):
