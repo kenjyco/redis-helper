@@ -555,8 +555,12 @@ class Collection(object):
         return obj
 
     @classmethod
-    def select_models(cls):
-        """A class method to select previously created model instance(s)"""
+    def select_models(cls, named=False):
+        """A class method to select previously created model instance(s)
+
+        - named: if True, return a dict where selected model names are the
+         keys and the Collection objects are the values
+        """
         s = cls.init_stats(20)
         items = [
             {
@@ -572,10 +576,17 @@ class Collection(object):
             wrap=False
         )
 
-        return [
+        models = [
             cls.get_model(selection['name'])
             for selection in selected
         ]
+        if not named:
+            return models
+        else:
+            return {
+                model.name: model
+                for model in models
+            }
 
     @classmethod
     def select_model(cls):
