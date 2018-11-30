@@ -9,7 +9,8 @@ def main():
     import input_helper as ih
 
     selected = rh.Collection.select_models(named=True)
-    ih.start_ipython(warn=True, rh=rh, ih=ih, **selected)
+    if selected:
+        ih.start_ipython(warn=True, rh=rh, ih=ih, **selected)
 
 
 if __name__ == '__main__':
