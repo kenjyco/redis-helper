@@ -51,6 +51,7 @@ class Collection(object):
         """
         self._namespace = namespace
         self._name = name
+        self._var_name = ih.make_var_name('{}_{}'.format(name, namespace))
         self._unique_field = unique_field
         index_fields_set = ih.string_to_set(index_fields)
         self._json_fields = ih.string_to_set(json_fields)
@@ -584,7 +585,7 @@ class Collection(object):
             return models
         else:
             return {
-                model.name: model
+                model.var_name: model
                 for model in models
             }
 
@@ -635,6 +636,11 @@ class Collection(object):
     def namespace(self):
         """Return the namespace of the collection"""
         return self._namespace
+
+    @property
+    def var_name(self):
+        """Return a valid Python variable name from name & namespace"""
+        return self._var_name
 
     @property
     def info(self):
