@@ -818,8 +818,7 @@ class Collection(object):
             if ih.from_string(data[field]) != old_value:
                 changes.append('{} {}: {} | {}'.format(hash_id, field, old_value, data[field]))
                 k = '{}--{}'.format(field, old_timestamp)
-                if old_value is not None:
-                    pipe.hset(changes_hash_key, k, old_value)
+                pipe.hset(changes_hash_key, k, old_value)
                 if field in self._index_base_keys:
                     old_index_key = self._make_key(self._base_key, field, old_value)
                     index_key = self._make_key(self._base_key, field, data[field])
