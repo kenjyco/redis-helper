@@ -51,7 +51,7 @@ class Collection(object):
         """
         self._namespace = namespace
         self._name = name
-        self._var_name = ih.make_var_name('{}_{}'.format(name, namespace))
+        self._var_name = ih.make_var_name('{}_{}'.format(namespace, name))
         self._unique_field = unique_field
         index_fields_set = ih.string_to_set(index_fields)
         self._json_fields = ih.string_to_set(json_fields)
