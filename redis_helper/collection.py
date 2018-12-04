@@ -540,19 +540,16 @@ class Collection(object):
         assert base_key or init_args, 'Must supply base_key or init_args'
         assert not base_key or not init_args, 'Cannot supply both base_key and init_args'
         obj = None
-        if cls.__name__ != 'Collection':
-            key = cls.__name__
-        else:
-            key = '_REDIS_HELPER_COLLECTION'
         if base_key:
-            init_args = ih.decode(rh.REDIS.hget(key, base_key + '--last_args'))
+            init_args = ih.decode(rh.REDIS.hget('_REDIS_HELPER_COLLECTION', base_key + '--last_args'))
 
         if not init_args:
             return
-        elif key == '_REDIS_HELPER_COLLECTION':
+        elif init_args.startswith('Collection'):
             obj = eval('rh.' + init_args)
         else:
-            obj = pickle.loads(init_args)
+            data = rh.REDIS.get(init_args)
+            obj = pickle.loads(data)
         return obj
 
     @classmethod
