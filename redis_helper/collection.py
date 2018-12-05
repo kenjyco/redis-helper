@@ -500,7 +500,7 @@ class Collection(object):
             get_kwargs['include_meta'] = True
         if terms:
             insert_ts = get_kwargs.get('insert_ts', False)
-            now = self.now_utc_float
+            now = self.now_utc_float_string
             result_key, result_key_is_tmp = self._redis_zset_from_terms(terms, insert_ts)
             time_ranges = dh.get_time_ranges_and_args(
                 tz=ts_tz,
@@ -682,8 +682,12 @@ class Collection(object):
         return dh.utc_float_to_pretty()
 
     @property
+    def now_utc_float_string(self):
+        return dh.utc_now_float_string()
+
+    @property
     def now_utc_float(self):
-        return float(dh.utc_now_float_string())
+        return float(self.now_utc_float_string)
 
     @property
     def keyspace(self):
@@ -1111,7 +1115,7 @@ class Collection(object):
                 get_fields += ',{}'.format(post_fetch_sort_key)
 
         results = {}
-        now = self.now_utc_float
+        now = self.now_utc_float_string
         result_key, result_key_is_tmp = self._redis_zset_from_terms(terms, insert_ts)
         time_ranges = dh.get_time_ranges_and_args(
             tz=ts_tz,
