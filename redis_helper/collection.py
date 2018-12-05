@@ -600,6 +600,21 @@ class Collection(object):
         pprint(rh.REDIS.hgetall('_REDIS_HELPER_COLLECTION'))
 
     @property
+    def last_update(self):
+        """Return the last time the collection was updated"""
+        return ih.decode(rh.REDIS.hget(
+            '_REDIS_HELPER_COLLECTION',
+            self._base_key + '--last_update'
+        ))
+
+    @property
+    def last_update_admin(self):
+        """Return the last time the collection was updated using admin format"""
+        lu = self.last_update
+        if lu:
+            return dh.utc_float_to_pretty(lu)
+
+    @property
     def last(self):
         """Return the last item in the collection"""
         return self.get_by_position(-1)
@@ -644,6 +659,7 @@ class Collection(object):
         s = StringIO()
         s.write('_init_args: {}'.format(self._init_args))
         s.write('\n\nsize: {}'.format(self.size))
+        s.write('\n\nlast_update_admin: {}'.format(self.last_update_admin))
         s.write('\n\nkeyspace:\n')
         pprint(self.keyspace, s)
         s.write('\nindex_field_info:\n ')
