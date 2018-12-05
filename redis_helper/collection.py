@@ -93,11 +93,11 @@ class Collection(object):
         self._in_zset_key = self._make_key(self._base_key, '_in')
         self._get_id_stats_hash_key = self._make_key(self._base_key, '_get_id_stats')
         self._get_field_stats_hash_key = self._make_key(self._base_key, '_get_field_stats')
+        self._lock_string_key = self._make_key(self._base_key, '_LOCK')
         self._find_base_key = self._make_key(self._base_key, '_find')
         self._find_next_id_string_key = self._make_key(self._find_base_key, '_next_id')
         self._find_stats_hash_key = self._make_key(self._find_base_key, '_stats')
         self._find_searches_zset_key = self._make_key(self._find_base_key, '_searches')
-        self._lock_string_key = self._make_key(self._find_base_key, '_LOCK')
 
         ref_errors = []
         for f in self._reference_fields:
