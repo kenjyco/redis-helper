@@ -620,7 +620,7 @@ class Collection(object):
 
     @property
     def last_admin(self):
-        """Return the last item in the collection"""
+        """Return the last item in the collection using admin format for _ts"""
         return self.get_by_position(-1, admin_fmt=True)
 
     @property
@@ -630,7 +630,7 @@ class Collection(object):
 
     @property
     def first_admin(self):
-        """Return the first item in the collection"""
+        """Return the first item in the collection using admin format for _ts"""
         return self.get_by_position(0, admin_fmt=True)
 
     @property
