@@ -946,7 +946,12 @@ class Collection(object):
         return self.old_data_for_hash_id(hash_id)
 
     def recent_unique_values(self, limit=10):
-        """Return list of limit most recent unique values"""
+        """Return list of limit most recent unique values
+
+        - limit: max number of results to return (default 10)
+            - if None is passed, then all results will be returned
+        """
+        limit = self.size if limit is None else limit
         return [
             ih.decode(val)
             for val in rh.REDIS.zrevrange(self._id_zset_key, start=0, end=limit-1)
@@ -954,14 +959,17 @@ class Collection(object):
 
     def all_unique_values(self):
         """Return list of all unique values"""
-        return self.recent_unique_values(limit=self.size)
+        return self.recent_unique_values(limit=None)
 
     def top_values_for_index(self, index_name, limit=10):
         """Return a list of tuples containing top values and counts for 'index_name'
 
         - index_name: name of index field to get top values and counts for
             - if index_name is the self._unique_field, the order by most recent
+        - limit: max number of results to return (default 10)
+            - if None is passed, then all results will be returned
         """
+        limit = self.size if limit is None else limit
         if index_name is self._unique_field:
             return [
                 (value, 1)
@@ -980,8 +988,10 @@ class Collection(object):
     def index_field_info(self, limit=10):
         """Return list of 2-item tuples (index_field:value, count)
 
-        - limit: number of top index values per index type
+        - limit: number of top index values per index type (default 10)
+            - if None is passed, then all results will be returned
         """
+        limit = self.size if limit is None else limit
         results = []
         for index_field, base_key in sorted(self._index_base_keys.items()):
             results.extend([
@@ -1076,7 +1086,8 @@ class Collection(object):
         - terms: string of 'index_field:value' pairs
         - start: utc_float
         - end: utc_float
-        - limit: max number of results
+        - limit: max number of results to return (default 20)
+            - if None is passed, then all results will be returned
         - desc: if True, return results in descending order; if None,
           auto-determine if desc should be True or False
         - get_fields: string of field names to get for each matching hash_id
@@ -1101,6 +1112,7 @@ class Collection(object):
             - no effect if 'item_format' is specified
         - sort_key_default_val: default value to use when sort key does not exist
         """
+        limit = self.size if limit is None else limit
         if item_format:
             # Ensure that all fields specified in item_format are fetched
             fields_in_string = set(_CURLY_MATCHER(item_format).get('curly_group_list', []))
