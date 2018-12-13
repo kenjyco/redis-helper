@@ -26,6 +26,7 @@ setup(
         'input-helper',
         'settings-helper',
         'dt-helper',
+        'fs-helper',
     ],
     include_package_data=True,
     package_dir={'': '.'},
