@@ -6,14 +6,14 @@ with open('README.rst', 'r') as fp:
 
 setup(
     name='redis-helper',
-    version='0.3.36',
+    version='0.3.37',
     description='Easily store, index, and modify Python dicts in Redis (with flexible searching)',
     long_description=long_description,
     author='Ken',
     author_email='kenjyco@gmail.com',
     license='MIT',
     url='https://github.com/kenjyco/redis-helper',
-    download_url='https://github.com/kenjyco/redis-helper/tarball/v0.3.36',
+    download_url='https://github.com/kenjyco/redis-helper/tarball/v0.3.37',
     packages=find_packages(),
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
