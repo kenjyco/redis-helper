@@ -12,7 +12,7 @@ model = rh.Collection(...)
 """
 
 
-LOGFILE = os.path.abspath('log--redis-helper.log')
+LOGFILE = os.path.abspath(os.path.expanduser('~/logs/redis-helper.log'))
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 file_handler = logging.FileHandler(LOGFILE, mode='a')
