@@ -2,6 +2,7 @@ import pickle
 import ujson
 import random
 import re
+import warnings
 import redis_helper as rh
 import input_helper as ih
 import dt_helper as dh
@@ -115,7 +116,7 @@ class Collection(object):
                 continue
             self.field_reference_dict[field] = model
         if ref_errors:
-            raise Exception('Reference field errors: ' + repr(ref_errors))
+            warnings.warn('Reference field errors: ' + repr(ref_errors))
 
         _parts = [
             '({}, {}'.format(repr(namespace), repr(name)),
