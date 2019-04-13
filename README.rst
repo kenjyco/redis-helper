@@ -44,26 +44,26 @@ Install Redis and start server
 
 ::
 
-    % sudo apt-get install -y redis-server
+   % sudo apt-get install -y redis-server
 
-    or
+   or
 
-    % brew install redis@3.2
-    % brew services start redis@3.2
+   % brew install redis@3.2
+   % brew services start redis@3.2
 
 Install latest tag/release of `redis-helper package <https://pypi.python.org/pypi/redis-helper>`__
 --------------------------------------------------------------------------------------------------
 
 ::
 
-    % pip3 install redis-helper
+   % pip3 install redis-helper
 
 Install latest commit on master of `redis-helper project <https://github.com/kenjyco/redis-helper>`__
 -----------------------------------------------------------------------------------------------------
 
 ::
 
-    % pip3 install git+git://github.com/kenjyco/redis-helper
+   % pip3 install git+git://github.com/kenjyco/redis-helper
 
 Intro
 -----
@@ -85,29 +85,29 @@ Collection will have a name pattern that starts with the ``_base_key``.
 
 .. code:: python
 
-    import redis_helper as rh
+   import redis_helper as rh
 
 
-    request_logs = rh.Collection(
-        'log',
-        'request',
-        index_fields='status,uri,host',
-        json_fields='request,response,headers'
-    )
+   request_logs = rh.Collection(
+       'log',
+       'request',
+       index_fields='status, uri, host',
+       json_fields='request, response, headers'
+   )
 
-    urls = rh.Collection(
-        'web',
-        'url',
-        unique_field='name',
-        index_fields='domain,_type'
-    )
+   urls = rh.Collection(
+       'web',
+       'url',
+       unique_field='name',
+       index_fields='domain, _type'
+   )
 
-    notes = rh.Collection(
-        'input',
-        'note',
-        index_fields='topic,tag',
-        insert_ts=True
-    )
+   notes = rh.Collection(
+       'input',
+       'note',
+       index_fields='topic, tag',
+       insert_ts=True
+   )
 
 -  a ``unique_field`` can be specified on a collection if items in the
    collection should not contain duplicate values for that particular
@@ -161,21 +161,21 @@ modified).
 
 .. code:: python
 
-    request_logs.add(
-        method='get',
-        status=400,
-        host='blah.net',
-        uri='/info',
-        request={'x': 50, 'y': 100},
-        response={'error': 'bad request'},
-    )
+   request_logs.add(
+       method='get',
+       status=400,
+       host='blah.net',
+       uri='/info',
+       request={'x': 50, 'y': 100},
+       response={'error': 'bad request'},
+   )
 
-    urls.add(
-        name='redis-helper github',
-        url='https://github.com/kenjyco/redis-helper',
-        domain='github.com',
-        _type='repo',
-    )
+   urls.add(
+       name='redis-helper github',
+       url='https://github.com/kenjyco/redis-helper',
+       domain='github.com',
+       _type='repo',
+   )
 
 The ``get`` method is a wrapper to `hash
 commands <http://redis.io/commands#hash>`__ ``hget``, ``hmget``, or
@@ -188,12 +188,12 @@ the number of fields requested.
 
 .. code:: python
 
-    request_logs.get('log:request:1')
-    request_logs.get('log:request:1', 'host,status')
-    request_logs.get('log:request:1', item_format='{status} for {host}{uri}')
-    request_logs.get_by_position(0, item_format='{status} for {host}{uri}')
-    urls.get_by_position(-1, 'domain,url')
-    urls.get_by_unique_value('redis-helper github', item_format='{url} points to a {_type}')
+   request_logs.get('log:request:1')
+   request_logs.get('log:request:1', 'host,status')
+   request_logs.get('log:request:1', item_format='{status} for {host}{uri}')
+   request_logs.get_by_position(0, item_format='{status} for {host}{uri}')
+   urls.get_by_position(-1, 'domain,url')
+   urls.get_by_unique_value('redis-helper github', item_format='{url} points to a {_type}')
 
 -  the ``get_by_position`` and ``get_by_unique_value`` methods are
    wrappers to ``get``
@@ -239,12 +239,12 @@ search criteria are returned instead of the actual results
 
 .. code:: python
 
-    request_logs.find('status:400, host:blah.net', get_fields='uri,error')
-    request_logs.find(since='1:hr, 30:min', until='15:min, 5:min')
-    request_logs.find(count=True, since='1:hr, 30:min', until='15:min, 5:min')
-    urls.find(count=True, since='1:hr, 30:min, 10:min, 5:min, 1:min')
-    urls.find(start_ts='2017-02-03', end_ts='2017-02-03 7:15:00')
-    urls.find(start_ts='2017-02-03', item_format='{_ts} -> {_id}')
+   request_logs.find('status:400, host:blah.net', get_fields='uri,error')
+   request_logs.find(since='1:hr, 30:min', until='15:min, 5:min')
+   request_logs.find(count=True, since='1:hr, 30:min', until='15:min, 5:min')
+   urls.find(count=True, since='1:hr, 30:min, 10:min, 5:min, 1:min')
+   urls.find(start_ts='2017-02-03', end_ts='2017-02-03 7:15:00')
+   urls.find(start_ts='2017-02-03', item_format='{_ts} -> {_id}')
 
 The ``update`` method allows you to change values for some fields
 (modifying the ``unique_field``, when it is specified, is not allowed).
@@ -256,18 +256,18 @@ The ``update`` method allows you to change values for some fields
 
 .. code:: python
 
-    urls.update('web:url:1', _type='fancy', notes='this is a fancy url')
-    urls.old_data_for_hash_id('web:url:1')
-    urls.old_data_for_unique_value('redis-helper github'
+   urls.update('web:url:1', _type='fancy', notes='this is a fancy url')
+   urls.old_data_for_hash_id('web:url:1')
+   urls.old_data_for_unique_value('redis-helper github')
 
 Local development setup
 -----------------------
 
 ::
 
-    % git clone https://github.com/kenjyco/redis-helper
-    % cd redis-helper
-    % ./dev-setup.bash
+   % git clone https://github.com/kenjyco/redis-helper
+   % cd redis-helper
+   % ./dev-setup.bash
 
 The
 `dev-setup.bash <https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash>`__
@@ -298,17 +298,17 @@ code <https://github.com/kenjyco/redis-helper/tree/master/tests>`__).
 
 ::
 
-    % venv/bin/py.test
+   % venv/bin/py.test
 
 or
 
 ::
 
-    % venv/bin/python3 setup.py test
+   % venv/bin/python3 setup.py test
 
 ..
 
-    Note: This option requires ``setuptools`` to be installed.
+   Note: This option requires ``setuptools`` to be installed.
 
 Usage
 -----
@@ -318,57 +318,57 @@ The ``rh-download-examples``, ``rh-download-scripts``, ``rh-notes``, and
 
 ::
 
-    $ venv/bin/rh-download-examples --help
-    Usage: rh-download-examples [OPTIONS] [DIRECTORY]
+   $ venv/bin/rh-download-examples --help
+   Usage: rh-download-examples [OPTIONS] [DIRECTORY]
 
-      Download redis-helper example files from github
+     Download redis-helper example files from github
 
-    Options:
-      --help  Show this message and exit.
+   Options:
+     --help  Show this message and exit.
 
-    $ venv/bin/rh-download-scripts --help
-    Usage: rh-download-scripts [OPTIONS] [DIRECTORY]
+   $ venv/bin/rh-download-scripts --help
+   Usage: rh-download-scripts [OPTIONS] [DIRECTORY]
 
-      Download redis-helper script files from github
+     Download redis-helper script files from github
 
-    Options:
-      --help  Show this message and exit.
+   Options:
+     --help  Show this message and exit.
 
-    $ venv/bin/rh-notes --help
-    Usage: rh-notes [OPTIONS] [TOPIC]
+   $ venv/bin/rh-notes --help
+   Usage: rh-notes [OPTIONS] [TOPIC]
 
-      Prompt user to enter notes (about a topic) until finished; or review notes
+     Prompt user to enter notes (about a topic) until finished; or review notes
 
-    Options:
-      -c, --ch TEXT  string appended to the topic (default "> ")
-      -s, --shell    Start an ipython shell to inspect the notes collection
-      --help         Show this message and exit.
+   Options:
+     -c, --ch TEXT  string appended to the topic (default "> ")
+     -s, --shell    Start an ipython shell to inspect the notes collection
+     --help         Show this message and exit.
 
-    $ venv/bin/rh-shell --help
-    Usage: rh-shell [OPTIONS]
+   $ venv/bin/rh-shell --help
+   Usage: rh-shell [OPTIONS]
 
-      Interactively select a Collection model and start ipython shell
+     Interactively select a Collection model and start ipython shell
 
-    Options:
-      --help  Show this message and exit.
+   Options:
+     --help  Show this message and exit.
 
 .. code:: python
 
-    >>> import redis_helper as rh
-    >>> collection = rh.Collection(..., index_fields='field1,field3')
-    >>> hash_id = collection.add(field1='', field2='', field3='', ...)
-    >>> collection.add(...)
-    >>> collection.add(...)
-    >>> collection.update(hash_id, field1='', field4='', ...)
-    >>> change_history = collection.old_data_for_hash_id(hash_id)
-    >>> data = collection.get(hash_id)
-    >>> some_data = collection.get(hash_id, 'field1,field3')
-    >>> results = collection.find(...)
-    >>> results2 = collection.find('field1:val,field3:val', ...)
-    >>> results3 = collection.find(..., get_fields='field2,field4')
-    >>> counts = collection.find(count=True, ...)
-    >>> top_indexed = collection.index_field_info()
-    >>> collection.delete(hash_id, ...)
+   >>> import redis_helper as rh
+   >>> collection = rh.Collection(..., index_fields='field1, field3')
+   >>> hash_id = collection.add(field1='', field2='', field3='', ...)
+   >>> collection.add(...)
+   >>> collection.add(...)
+   >>> collection.update(hash_id, field1='', field4='', ...)
+   >>> change_history = collection.old_data_for_hash_id(hash_id)
+   >>> data = collection.get(hash_id)
+   >>> some_data = collection.get(hash_id, 'field1, field3')
+   >>> results = collection.find(...)
+   >>> results2 = collection.find('field1:val, field3:val', ...)
+   >>> results3 = collection.find(..., get_fields='field2, field4')
+   >>> counts = collection.find(count=True, ...)
+   >>> top_indexed = collection.index_field_info()
+   >>> collection.delete(hash_id, ...)
 
 Basics - Part 1 (request logging demo)
 --------------------------------------
@@ -412,7 +412,14 @@ The first demo walks through the following:
 -  creating a virtual environment, installing redis-helper, and
    downloading example files
 
-   ``$ python3 -m venv venv   $ venv/bin/pip3 install redis-helper ipython   $ venv/bin/rh-download-examples   $ cat ~/.config/redis-helper/settings.ini   $ venv/bin/ipython -i request_logs.py``
+   ::
+
+      $ python3 -m venv venv
+      $ venv/bin/pip3 install redis-helper ipython
+      $ venv/bin/rh-download-examples
+      $ cat ~/.config/redis-helper/settings.ini
+      $ venv/bin/ipython -i request_logs.py
+
 -  using the sample ``Collection`` defined in
    `request_logs.py <https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py>`__
    to
@@ -447,13 +454,13 @@ The first demo walks through the following:
       -  ``redis_helper.Collection.find('index_field:value')``
       -  ``redis_helper.Collection.find('index_field:value', all_fields=True, limit=2)``
       -  ``redis_helper.Collection.find('index_field:value', all_fields=True, limit=2, admin_fmt=True, item_format='{_ts} -> {_id}')``
-      -  ``redis_helper.Collection.find('index_field:value', get_fields='field1,field2', include_meta=False)``
+      -  ``redis_helper.Collection.find('index_field:value', get_fields='field1, field2', include_meta=False)``
       -  ``redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True)``
       -  ``redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True, since='5:min, 1:min, 10:sec')``
       -  ``redis_helper.Collection.get(hash_id)``
       -  ``redis_helper.Collection.get(hash_id, 'field1,field2,field3')``
       -  ``redis_helper.Collection.get(hash_id, include_meta=True)``
-      -  ``redis_helper.Collection.get(hash_id, include_meta=True, fields='field1,field2')``
+      -  ``redis_helper.Collection.get(hash_id, include_meta=True, fields='field1, field2')``
       -  ``redis_helper.Collection.get(hash_id, include_meta=True, item_format='{_ts} -> {_id}')``
       -  ``redis_helper.Collection.get_by_position(0)``
       -  ``redis_helper.Collection.get_by_position(0, include_meta=True, admin_fmt=True)``
@@ -485,20 +492,20 @@ insert the following, one line above where you want to inspect
 
 ::
 
-    import pdb; pdb.set_trace()
+   import pdb; pdb.set_trace()
 
 To start the debugger inside `test
 code <https://github.com/kenjyco/redis-helper/tree/master/tests>`__, use
 
 ::
 
-    pytest.set_trace()
+   pytest.set_trace()
 
 -  use ``(l)ist`` to list context lines
 -  use ``(n)ext`` to move on to the next statement
 -  use ``(s)tep`` to step into a function
--  use ``(c)ontinue`` to continue to next break point (i.e.
-   ``set_trace()`` lines in your code)
+-  use ``(c)ontinue`` to continue to next break point
+   (i.e. ``set_trace()`` lines in your code)
 -  use ``sticky`` to toggle sticky mode (to constantly show the
    currently executing code as you move through with the debugger)
 -  use ``pp`` to pretty print a variable or statement
