@@ -57,6 +57,17 @@ def coll4():
     return rh.Collection('test', 'coll4', index_fields='a, b, c')
 
 
+@pytest.fixture
+def coll5():
+    return rh.Collection('test', 'coll5', unique_field='name', index_fields='status')
+
+
+@pytest.fixture
+def coll6():
+    return rh.Collection('test', 'coll6', reference_fields='thing--test:coll5',
+                         index_fields='z')
+
+
 @pytest.mark.skipif(DBSIZE != 0, reason='Database is not empty, has {} item(s)'.format(DBSIZE))
 @pytest.mark.skipif(REDIS_CONNECTED is False, reason='Not connected to redis')
 class TestCollection:
@@ -66,10 +77,14 @@ class TestCollection:
         _coll2 = coll2()
         _coll3 = coll3()
         _coll4 = coll4()
+        _coll5 = coll5()
+        _coll6 = coll6()
         _coll1.clear_keyspace()
         _coll2.clear_keyspace()
         _coll3.clear_keyspace()
         _coll4.clear_keyspace()
+        _coll5.clear_keyspace()
+        _coll6.clear_keyspace()
         rh.REDIS.delete('_REDIS_HELPER_COLLECTION')
 
     def test_add_and_get(self, coll1):
@@ -107,6 +122,24 @@ class TestCollection:
             coll3.add(**generate_coll23_data())
 
         assert coll3.size == 20
+
+    def test_add_and_get_with_unique(self, coll5):
+        hash_id = coll5.add(name='first', x=5, y=10, status='ok')
+        assert coll5[-1]['name'] == 'first'
+        with pytest.raises(AssertionError):
+            coll5.add(name='first', x=10, y=100, status='ok')
+        with pytest.raises(AssertionError):
+            coll5.add(x=10, y=100, status='ok')
+        coll5.add(name='second', x=10, y=100, status='ok')
+        assert coll5['first'] == coll5.get(hash_id, include_meta=True)
+
+    def test_add_and_get_with_reference(self, coll5, coll6):
+        hash_id = coll6.add(thing='first', z=100, misc='sure')
+        thing = coll6.get(hash_id, 'thing')['thing']
+        thing_with_ref_data = coll6.get(hash_id, 'thing', load_ref_data=True)['thing']
+        first_from_coll5 = coll5['first']
+        assert thing == 'first'
+        assert thing_with_ref_data == first_from_coll5
 
     def test_find(self, coll4):
         coll4.add(a='red', b='circle', c='striped')
@@ -159,15 +192,19 @@ class TestCollection:
         assert len(reds) == 2
         assert coll4.get(a_red_id)['a'] == 'blue'
 
-    def test_base_key(self, coll1, coll2, coll3, coll4):
+    def test_base_key(self, coll1, coll2, coll3, coll4, coll5, coll6):
         coll1._base_key == 'test:coll1'
         coll2._base_key == 'test:coll2'
         coll3._base_key == 'test:coll3'
         coll4._base_key == 'test:coll4'
+        coll5._base_key == 'test:coll5'
+        coll6._base_key == 'test:coll6'
 
-    def test_keyspace_in_use(self, coll1, coll2, coll3, coll4):
+    def test_keyspace_in_use(self, coll1, coll2, coll3, coll4, coll5, coll6):
         assert rh.REDIS.dbsize() > 0
         assert coll1.size > 0
         assert coll2.size > 0
         assert coll3.size > 0
         assert coll4.size > 0
+        assert coll5.size > 0
+        assert coll6.size > 0
