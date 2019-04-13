@@ -95,21 +95,21 @@ import redis_helper as rh
 request_logs = rh.Collection(
     'log',
     'request',
-    index_fields='status,uri,host',
-    json_fields='request,response,headers'
+    index_fields='status, uri, host',
+    json_fields='request, response, headers'
 )
 
 urls = rh.Collection(
     'web',
     'url',
     unique_field='name',
-    index_fields='domain,_type'
+    index_fields='domain, _type'
 )
 
 notes = rh.Collection(
     'input',
     'note',
-    index_fields='topic,tag',
+    index_fields='topic, tag',
     insert_ts=True
 )
 ```
@@ -239,7 +239,7 @@ The `update` method allows you to change values for some fields (modifying the
 ```python
 urls.update('web:url:1', _type='fancy', notes='this is a fancy url')
 urls.old_data_for_hash_id('web:url:1')
-urls.old_data_for_unique_value('redis-helper github'
+urls.old_data_for_unique_value('redis-helper github')
 ```
 
 ## Local development setup
@@ -330,17 +330,17 @@ Options:
 
 ```python
 >>> import redis_helper as rh
->>> collection = rh.Collection(..., index_fields='field1,field3')
+>>> collection = rh.Collection(..., index_fields='field1, field3')
 >>> hash_id = collection.add(field1='', field2='', field3='', ...)
 >>> collection.add(...)
 >>> collection.add(...)
 >>> collection.update(hash_id, field1='', field4='', ...)
 >>> change_history = collection.old_data_for_hash_id(hash_id)
 >>> data = collection.get(hash_id)
->>> some_data = collection.get(hash_id, 'field1,field3')
+>>> some_data = collection.get(hash_id, 'field1, field3')
 >>> results = collection.find(...)
->>> results2 = collection.find('field1:val,field3:val', ...)
->>> results3 = collection.find(..., get_fields='field2,field4')
+>>> results2 = collection.find('field1:val, field3:val', ...)
+>>> results3 = collection.find(..., get_fields='field2, field4')
 >>> counts = collection.find(count=True, ...)
 >>> top_indexed = collection.index_field_info()
 >>> collection.delete(hash_id, ...)
@@ -424,13 +424,13 @@ The first demo walks through the following:
         - `redis_helper.Collection.find('index_field:value')`
         - `redis_helper.Collection.find('index_field:value', all_fields=True, limit=2)`
         - `redis_helper.Collection.find('index_field:value', all_fields=True, limit=2, admin_fmt=True, item_format='{_ts} -> {_id}')`
-        - `redis_helper.Collection.find('index_field:value', get_fields='field1,field2', include_meta=False)`
+        - `redis_helper.Collection.find('index_field:value', get_fields='field1, field2', include_meta=False)`
         - `redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True)`
         - `redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True, since='5:min, 1:min, 10:sec')`
         - `redis_helper.Collection.get(hash_id)`
         - `redis_helper.Collection.get(hash_id, 'field1,field2,field3')`
         - `redis_helper.Collection.get(hash_id, include_meta=True)`
-        - `redis_helper.Collection.get(hash_id, include_meta=True, fields='field1,field2')`
+        - `redis_helper.Collection.get(hash_id, include_meta=True, fields='field1, field2')`
         - `redis_helper.Collection.get(hash_id, include_meta=True, item_format='{_ts} -> {_id}')`
         - `redis_helper.Collection.get_by_position(0)`
         - `redis_helper.Collection.get_by_position(0, include_meta=True, admin_fmt=True)`

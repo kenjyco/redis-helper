@@ -9,8 +9,8 @@ from pprint import pprint
 request_logs = rh.Collection(
     'log',
     'request',
-    index_fields='status,uri,host',
-    json_fields='request,response,headers'
+    index_fields='status, uri, host',
+    json_fields='request, response, headers'
 )
 
 

@@ -26,7 +26,7 @@ PLAYERS = rh.Collection(
     'mmo',
     'player',
     unique_field='handle',
-    index_fields='email,status',
+    index_fields='email, status',
     insert_ts=True
 )
 
@@ -34,7 +34,7 @@ CHARACTERS = rh.Collection(
     'mmo',
     'character',
     unique_field='name',
-    index_fields='species,specialty,rank,player,status',
+    index_fields='species, specialty, rank, player, status',
     insert_ts=True
 )
 
@@ -47,7 +47,7 @@ ITEMS = rh.Collection(
 MESSAGES = rh.Collection(
     'mmo',
     'message',
-    index_fields='to,from',
+    index_fields='to, from',
 )
 
 

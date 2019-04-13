@@ -54,7 +54,7 @@ def coll3():
 
 @pytest.fixture
 def coll4():
-    return rh.Collection('test', 'coll4', index_fields='a,b,c')
+    return rh.Collection('test', 'coll4', index_fields='a, b, c')
 
 
 @pytest.mark.skipif(DBSIZE != 0, reason='Database is not empty, has {} item(s)'.format(DBSIZE))
@@ -81,7 +81,7 @@ class TestCollection:
     def test_add_and_get_some(self, coll1):
         data = generate_coll1_data()
         hash_id = coll1.add(**data)
-        retrieved = coll1.get(hash_id, 'x,y')
+        retrieved = coll1.get(hash_id, 'x, y')
         assert retrieved == {k: v for k, v in data.items() if k in ('x', 'y')}
 
     def test_add_and_get_one(self, coll1):
@@ -123,11 +123,11 @@ class TestCollection:
         assert len(coll4.find()) == 10
         assert len(coll4.find(limit=5)) == 5
         assert coll4.find('a:blue', count=True) == 2
-        assert coll4.find('a:red,a:yellow', count=True) == 6
-        assert len(coll4.find('a:red,a:yellow', limit=3)) == 3
-        assert coll4.find('b:triangle,c:spotted', count=True) == 3
-        assert coll4.find('b:triangle,b:square,c:striped,c:plain', count=True) == 4
-        assert coll4.find('a:red,b:triangle,b:square,c:spotted,c:plain', count=True) == 3
+        assert coll4.find('a:red, a:yellow', count=True) == 6
+        assert len(coll4.find('a:red, a:yellow', limit=3)) == 3
+        assert coll4.find('b:triangle, c:spotted', count=True) == 3
+        assert coll4.find('b:triangle, b:square, c:striped, c:plain', count=True) == 4
+        assert coll4.find('a:red, b:triangle, b:square, c:spotted, c:plain', count=True) == 3
 
     def test_delete(self, coll4):
         reds = coll4.find('a:red')

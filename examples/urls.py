@@ -8,7 +8,7 @@ urls = rh.Collection(
     'web',
     'url',
     unique_field='name',
-    index_fields='domain,_type'
+    index_fields='domain, _type'
 )
 
 
