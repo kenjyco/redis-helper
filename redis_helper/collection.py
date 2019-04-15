@@ -744,6 +744,11 @@ class Collection(object):
 
         self.wait_for_unlock()
         pipe.delete(hash_id)
+        pipe.hdel(
+            self._get_id_stats_hash_key,
+            hash_id + '--count',
+            hash_id + '--last_access',
+        )
         index_fields = ','.join(self._index_base_keys.keys())
         if index_fields:
             for k, v in self.get(hash_id, index_fields).items():

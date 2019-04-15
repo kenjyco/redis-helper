@@ -169,9 +169,11 @@ class TestCollection:
         assert rh.REDIS.zscore('test:coll4:a', 'red') == 4.0
         a_red_id = reds[0]['_id']
         a_red = coll4.get(a_red_id)
+        assert a_red_id in coll4.get_stats()['counts']
         b_field = a_red['b']
         b_count = rh.REDIS.zscore('test:coll4:b', b_field)
         coll4.delete(a_red_id)
+        assert a_red_id not in coll4.get_stats()['counts']
         reds = coll4.find('a:red')
         assert rh.REDIS.zscore('test:coll4:a', 'red') == 3.0
         assert coll4.size == 9
