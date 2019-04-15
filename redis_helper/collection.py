@@ -1063,13 +1063,22 @@ class Collection(object):
         if stat_base_names:
             pipe = rh.REDIS.pipeline()
             for stat_base, set_name in stat_base_names.items():
-                pipe.zadd(self._find_searches_zset_key, now, stat_base)
-                pipe.hincrby(self._find_stats_hash_key, stat_base + '--count', 1)
-                pipe.hset(
-                    self._find_stats_hash_key,
-                    stat_base + '--last_size',
-                    rh.REDIS.scard(set_name)
-                )
+                set_len = rh.REDIS.scard(set_name)
+                if set_len == 0:
+                    pipe.zrem(self._find_searches_zset_key, stat_base)
+                    pipe.hdel(
+                        self._find_stats_hash_key,
+                        stat_base + '--count',
+                        stat_base + '--last_size',
+                    )
+                else:
+                    pipe.zadd(self._find_searches_zset_key, now, stat_base)
+                    pipe.hincrby(self._find_stats_hash_key, stat_base + '--count', 1)
+                    pipe.hset(
+                        self._find_stats_hash_key,
+                        stat_base + '--last_size',
+                        set_len
+                    )
             pipe.execute()
 
         if tmp_keys:
