@@ -708,79 +708,81 @@ class Collection(object):
         for key in rh.REDIS.scan_iter('{}*'.format(self._base_key)):
             rh.REDIS.delete(key)
 
-    def delete(self, hash_id, pipe=None, insert_ts=False):
+    def delete(self, hash_id, pipe=None):
         """Delete a specific hash_id's data and remove from indexes it is in
 
         - hash_id: hash_id to remove
         - pipe: if a redis pipeline object is passed in, just add more
           operations to the pipe
-        - insert_ts: if True, use score of insert time instead of modify time
         """
         assert hash_id.startswith(self._base_key), (
             '{} does not start with {}'.format(repr(hash_id), repr(self._base_key))
         )
-        if insert_ts:
-            key = self._in_zset_key
-            other_key = self._ts_zset_key
-        else:
-            key = self._ts_zset_key
-            other_key = self._in_zset_key
+        key = self._ts_zset_key
+        other_key = self._in_zset_key
         score = rh.REDIS.zscore(key, hash_id)
-        if score is None:
-            # Cleanup things in self._id_zset_key if there is a unique_field
-            result = None
-            if self._unique_field:
-                number = int(hash_id.split(':')[-1])
-                unique_vals = rh.REDIS.zrangebyscore(self._id_zset_key, number, number)
-                if unique_vals:
-                    unique_val = unique_vals[0]
-                    result = rh.REDIS.zrem(self._id_zset_key, unique_val)
-            return result
+        score2 = rh.REDIS.zscore(other_key, hash_id)
+        unique_val = None
+        if self._unique_field:
+            number = int(hash_id.split(':')[-1])
+            unique_vals = rh.REDIS.zrangebyscore(self._id_zset_key, number, number)
+            if unique_vals:
+                unique_val = unique_vals[0]
+        if not score and not score2 and not unique_val:
+            return
+
         if pipe is not None:
+            if len(pipe.command_stack) > 1000:
+                pipe.execute()
+                pipe = rh.REDIS.pipeline()
             execute = False
         else:
+            self.wait_for_unlock()
+            self._lock()
             pipe = rh.REDIS.pipeline()
             execute = True
 
-        self.wait_for_unlock()
         pipe.delete(hash_id)
+        pipe.delete(self._make_key(hash_id, '_changes'))
         pipe.hdel(
             self._get_id_stats_hash_key,
             hash_id + '--count',
             hash_id + '--last_access',
         )
+        if score:
+            pipe.zrem(key, hash_id)
+        if score2:
+            pipe.zrem(other_key, hash_id)
+        if unique_val:
+            pipe.zrem(self._id_zset_key, unique_val)
+
         index_fields = ','.join(self._index_base_keys.keys())
         if index_fields:
             for k, v in self.get(hash_id, index_fields).items():
                 old_index_key = self._make_key(self._base_key, k, v)
                 pipe.srem(old_index_key, hash_id)
                 pipe.zincrby(self._index_base_keys[k], v, -1)
-        if self._unique_field:
-            unique_val = self.get(hash_id, self._unique_field)[self._unique_field]
-            pipe.zrem(key, unique_val)
-            pipe.zrem(other_key, unique_val)
-            pipe.zrem(self._id_zset_key, unique_val)
-        pipe.delete(self._make_key(hash_id, '_changes'))
-        pipe.zrem(other_key, hash_id)
+
         pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
 
         if execute:
-            pipe.zrem(key, hash_id)
             val = pipe.execute()
             rh.REDIS.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size)
+            self._unlock()
             return val
 
-    def delete_many(self, *hash_ids, insert_ts=False):
-        """Wrapper to self.delete
-
-        - insert_ts: if True, use score of insert time instead of modify time
-        """
+    def delete_many(self, *hash_ids):
+        """Wrapper to self.delete"""
+        self.wait_for_unlock()
+        self._lock()
         pipe = rh.REDIS.pipeline()
         for hash_id in hash_ids:
-            self.delete(hash_id, pipe, insert_ts)
-        val = pipe.execute()[-1]
+            self.delete(hash_id, pipe)
+        val = pipe.execute()
         rh.REDIS.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size)
-        return val
+        self._unlock()
+        if val:
+            return val[-1]
 
     def delete_to(self, score=None, ts='', tz=None, insert_ts=False):
         """Delete all items with a score (timestamp) between 0 and score
@@ -797,13 +799,12 @@ class Collection(object):
         if score is None:
             return
         key = self._ts_zset_key if not insert_ts else self._in_zset_key
-        pipe = rh.REDIS.pipeline()
-        for hash_id in rh.REDIS.zrangebyscore(key, 0, score):
-            self.delete(hash_id, pipe, insert_ts)
-        pipe.zremrangebyscore(key, 0, score)
-        val = pipe.execute()[-1]
-        rh.REDIS.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size)
-        return val
+        ids = [
+            ih.decode(hash_id)
+            for hash_id in rh.REDIS.zrangebyscore(key, 0, score)
+        ]
+        if ids:
+            return self.delete_many(*ids)
 
     def update(self, hash_id, **data):
         """Update data at a particular hash_id
