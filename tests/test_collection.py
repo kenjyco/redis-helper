@@ -194,6 +194,37 @@ class TestCollection:
         assert len(reds) == 2
         assert coll4.get(a_red_id)['a'] == 'blue'
 
+    def test_delete_where(self, coll4):
+        assert coll4.size == 9
+        assert coll4.top_values_for_index('a', 2) == [('blue', 3), ('yellow', 2)]
+        assert coll4.find('a:blue', count=True) == 3
+        found = coll4.find('a:blue', limit=1)
+        assert found and len(found) == 1
+        coll4.delete_where('a:blue', limit=2)
+        assert coll4.find('a:blue', count=True) == 1
+
+    def test_delete_where_limit(self, coll4):
+        assert coll4.size == 7
+        assert coll4.top_values_for_index('a', 2) == [('yellow', 2), ('red', 2)]
+        assert coll4.find(limit=2, desc=False, item_format='{_id}') == [
+            'test:coll4:1', 'test:coll4:2'
+        ]
+        coll4.delete_where(limit=2)
+        assert coll4.find(limit=2, desc=False, item_format='{_id}') == [
+            'test:coll4:3', 'test:coll4:4'
+        ]
+
+    def test_delete_many(self, coll4):
+        assert coll4.size == 5
+        three_ids = random.sample(coll4.find(item_format='{_id}'), 3)
+        one_id = random.choice(three_ids)
+        one_data = coll4.get(one_id)
+        assert one_data != {}
+        coll4.delete_many(*three_ids)
+        one_data = coll4.get(one_id)
+        assert one_data == {}
+        assert coll4.size == 2
+
     def test_base_key(self, coll1, coll2, coll3, coll4, coll5, coll6):
         coll1._base_key == 'test:coll1'
         coll2._base_key == 'test:coll2'

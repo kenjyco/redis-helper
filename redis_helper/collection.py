@@ -786,6 +786,26 @@ class Collection(object):
         if val:
             return val[-1]
 
+    def delete_where(self, terms='', limit=None, desc=False, insert_ts=False):
+        """Wrapper to self.delete_many
+
+        - terms: string of 'index_field:value' pairs
+        - limit: max number of items to delete (None to delete all matching)
+        - desc: if False and limit is not None, delete the oldest limit matches,
+          if True and limit is not None, delete the newest limit matches
+        - insert_ts: if True, use score of insert time instead of modify time
+        """
+        assert terms or limit, 'Must specify terms or a limit'
+        ids = self.find(
+            terms=terms,
+            limit=limit,
+            desc=desc,
+            insert_ts=insert_ts,
+            item_format='{_id}'
+        )
+        if ids:
+            return self.delete_many(*ids)
+
     def delete_to(self, score=None, ts='', tz=None, insert_ts=False):
         """Delete all items with a score (timestamp) between 0 and score
 
