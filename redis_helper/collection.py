@@ -252,6 +252,7 @@ class Collection(object):
             raise Exception('Validation errors: ' + repr(errors))
 
         self.wait_for_unlock()
+        self._lock()
         now = self.now_utc_float
         key = self._get_next_key(self._next_id_string_key, self._base_key)
         id_num = int(key.split(':')[-1])
@@ -277,6 +278,7 @@ class Collection(object):
             pipe.sadd(key_name, key)
             pipe.zincrby(base_key, str(data.get(index_field)), 1)
         pipe.execute()
+        self._unlock()
         return key
 
     def get(self, hash_ids, fields='', include_meta=False,
@@ -830,6 +832,7 @@ class Collection(object):
             raise Exception('Validation errors: ' + repr(errors))
 
         self.wait_for_unlock()
+        self._lock()
         changes = []
         now = self.now_utc_float
         update_fields = ','.join(data.keys())
@@ -860,6 +863,7 @@ class Collection(object):
             pipe.hmset(hash_id, data)
             pipe.zadd(self._ts_zset_key, now, hash_id)
             pipe.execute()
+        self._unlock()
         return changes
 
     def validate(self, **data):
@@ -879,8 +883,7 @@ class Collection(object):
 
         This should also be run if changing the value of the insert_ts init arg
         """
-        if self.is_locked:
-            return
+        self.wait_for_unlock()
         self._lock()
 
         pipe = rh.REDIS.pipeline()
