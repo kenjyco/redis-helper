@@ -242,6 +242,37 @@ urls.old_data_for_hash_id('web:url:1')
 urls.old_data_for_unique_value('redis-helper github')
 ```
 
+## Tip
+
+There may be times where you want to use redis-helper (if it's already
+installed), but don't want to make it an explicit requirement of your project.
+In cases like this you can do the following:
+
+```
+try:
+    import redis_helper as rh
+    from redis import ConnectionError as RedisConnectionError
+except ImportError:
+    SomeCollection = None
+else:
+    try:
+        SomeCollection = rh.Collection(
+            ...
+        )
+    except RedisConnectionError:
+        SomeCollection = None
+```
+
+Then in whatever function, you can just do:
+
+```
+def some_func():
+    if SomeCollection is None:
+        return
+
+    # Do stuff with SomeCollection
+```
+
 ## Local development setup
 
 [dev-setup.bash]: https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash
