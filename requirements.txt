@@ -6,6 +6,7 @@ pytz
 input-helper
 settings-helper
 dt-helper
+fs-helper
 
 # For development
 ipython==5.1.0
