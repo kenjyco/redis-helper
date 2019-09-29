@@ -828,8 +828,11 @@ class Collection(object):
         if ids:
             return self.delete_many(*ids)
 
-    def update(self, hash_id, **data):
+    def update(self, hash_id, change_history=True, **data):
         """Update data at a particular hash_id
+
+        - change_history: if True, save changes to the _changes hash key for
+          hash_id
 
         If a unique_field is being used, it cannot be updated
         """
@@ -863,8 +866,9 @@ class Collection(object):
         for field, old_value in self.get(hash_id, update_fields).items():
             if ih.from_string(data[field]) != old_value:
                 changes.append('{} {}: {} | {}'.format(hash_id, field, old_value, data[field]))
-                k = '{}--{}'.format(field, old_timestamp)
-                pipe.hset(changes_hash_key, k, old_value)
+                if change_history:
+                    k = '{}--{}'.format(field, old_timestamp)
+                    pipe.hset(changes_hash_key, k, old_value)
                 if field in self._index_base_keys:
                     old_index_key = self._make_key(self._base_key, field, old_value)
                     index_key = self._make_key(self._base_key, field, data[field])
