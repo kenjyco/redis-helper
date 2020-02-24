@@ -11,6 +11,11 @@ if [[ $(uname) =~ "MINGW" ]]; then
     PYTHON="python"
     PIP="venv/Scripts/pip"
 fi
+if [[ "$1" == "clean" ]]; then
+    rm -rf venv
+    find . \( -name __pycache__ -o -name '.eggs' -o -name '*.egg-info' -o -name 'build' -o -name 'dist' \) -print0 |
+        xargs -0 rm -rf
+fi
 [[ ! -d venv ]] && $PYTHON -m venv venv
 PYTHON=$(dirname $PIP)/python
 $PYTHON -m pip install --upgrade pip wheel
