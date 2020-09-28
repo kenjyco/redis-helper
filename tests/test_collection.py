@@ -71,22 +71,6 @@ def coll6():
 @pytest.mark.skipif(DBSIZE != 0, reason='Database is not empty, has {} item(s)'.format(DBSIZE))
 @pytest.mark.skipif(REDIS_CONNECTED is False, reason='Not connected to redis')
 class TestCollection:
-    @classmethod
-    def teardown_class(cls):
-        _coll1 = coll1()
-        _coll2 = coll2()
-        _coll3 = coll3()
-        _coll4 = coll4()
-        _coll5 = coll5()
-        _coll6 = coll6()
-        _coll1.clear_keyspace()
-        _coll2.clear_keyspace()
-        _coll3.clear_keyspace()
-        _coll4.clear_keyspace()
-        _coll5.clear_keyspace()
-        _coll6.clear_keyspace()
-        rh.REDIS.delete('_REDIS_HELPER_COLLECTION')
-
     def test_add_and_get(self, coll1):
         data = generate_coll1_data()
         hash_id = coll1.add(**data)
@@ -241,3 +225,20 @@ class TestCollection:
         assert coll4.size > 0
         assert coll5.size > 0
         assert coll6.size > 0
+
+    def test_clear_keyspace(self, coll1, coll2, coll3, coll4, coll5, coll6):
+        """This MUST be the final test since it's the new teardown"""
+        coll1.clear_keyspace()
+        coll2.clear_keyspace()
+        coll3.clear_keyspace()
+        coll4.clear_keyspace()
+        coll5.clear_keyspace()
+        coll6.clear_keyspace()
+        assert coll1.size == 0
+        assert coll2.size == 0
+        assert coll3.size == 0
+        assert coll4.size == 0
+        assert coll5.size == 0
+        assert coll6.size == 0
+        rh.REDIS.delete('_REDIS_HELPER_COLLECTION')
+        assert rh.REDIS.dbsize() == 0
