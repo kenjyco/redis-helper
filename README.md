@@ -135,6 +135,18 @@ notes = rh.Collection(
     index_fields='topic, tag',
     insert_ts=True
 )
+
+sample = rh.Collection(
+    'ns',
+    'sample',
+    unique_field='name',
+    index_fields='status',
+    json_fields='data',
+    rx_name='\S{4,6}',
+    rx_status='(active|inactive|cancelled)',
+    rx_aws='[a-z]+\-[0-9a-f]+',
+    insert_ts=True
+)
 ```
 
 - a `unique_field` can be specified on a collection if items in the collection
@@ -150,6 +162,8 @@ notes = rh.Collection(
       the values themselves are part of the index keys
 - use `json_fields` to specify which fields should be JSON encoded before
   insertion to Redis (using the very fast [ujson][] library)
+- use `rx_{field}` to specify a regular expression for any field with strict
+  rules for validation
 - use `pickle_fields` to specify which fields should be pickled before insertion
   to Redis
 - set `insert_ts=True` to create an additional index to store insert times
