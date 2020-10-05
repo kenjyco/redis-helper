@@ -50,6 +50,10 @@ class Collection(object):
 
         Separate fields in strings by any of , ; |
         """
+        if rh.REDIS is None:
+            connected, _ = rh.connect_to_server()
+            if not connected:
+                raise Exception('Unable to connect to {}'.format(rh.REDIS_URL))
         self._namespace = namespace
         self._name = name
         self._var_name = ih.make_var_name('{}_{}'.format(namespace, name))
@@ -136,7 +140,7 @@ class Collection(object):
 
         self._init_args = ''.join([
             self.__class__.__name__,
-            ', '.join([p for p in _parts if p is not '']),
+            ', '.join([p for p in _parts if p != '']),
             ')'
         ])
         pipe = rh.REDIS.pipeline()

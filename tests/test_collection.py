@@ -1,16 +1,11 @@
 import random
 import pytest
+import bg_helper as bh
 import redis_helper as rh
 from redis import ConnectionError
 
 
-try:
-    DBSIZE = rh.REDIS.dbsize()
-    REDIS_CONNECTED = True
-except (ConnectionError, AttributeError):
-    DBSIZE = float('inf')
-    REDIS_CONNECTED = False
-
+REDIS_CONNECTED, DBSIZE = rh.connect_to_server()
 
 WORDS = ['goats', 'dogs', 'grapes', 'bananas', 'smurfs', 'snorks', 'links', 'queries']
 
@@ -242,3 +237,4 @@ class TestCollection:
         assert coll6.size == 0
         rh.REDIS.delete('_REDIS_HELPER_COLLECTION')
         assert rh.REDIS.dbsize() == 0
+        rh.stop_docker()

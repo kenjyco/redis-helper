@@ -8,6 +8,7 @@
 [urls demo]: https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00
 [examples]: https://github.com/kenjyco/redis-helper/tree/master/examples
 [settings.ini]: https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini
+[bg-helper docker tools]: https://github.com/kenjyco/bg-helper#helper-functions-in-bg_helpertools-that-use-docker-if-it-is-installed
 
 Install redis-helper, create an instance of `redis_helper.Collection`
 (**the args/kwargs define the model**) and use the `add`, `get`, `update`,
@@ -40,28 +41,50 @@ The first time that `redis_helper` is imported, the sample
 [settings.ini][] file will be copied to the `~/.config/redis-helper`
 directory.
 
-## Install Redis and start server
+```
+[default]
+image_version = 5-alpine
+
+[dev]
+container_name = redis-helper
+port = 6379
+rm = False
+redis_url = redis://localhost:6379/1
+
+[test]
+container_name = redis-helper-test
+port = 6380
+rm = True
+redis_url = redis://localhost:6380/9
+```
+
+If docker is installed to your system and your user has permission to use it,
+the [bg-helper docker tools][] will be used to start a redis container for
+development or running tests, if Redis is not already installed locally.
+
+## (Optionally) install Redis and start server locally
 
 ```
 % sudo apt-get install -y redis-server
 
 or
 
-% brew install redis@3.2
-% brew services start redis@3.2
+% brew install redis
+% brew services start redis
 ```
 
-## Install latest tag/release of [redis-helper package][]
+## Install redis-helper
 
-```
-% pip3 install redis-helper
-```
+- install latest tag/release of [redis-helper package][]
 
-## Install latest commit on master of [redis-helper project][]
+    ```
+    % pip3 install redis-helper
+    ```
+- or, install latest commit on master of [redis-helper project][]
 
-```
-% pip3 install git+git://github.com/kenjyco/redis-helper
-```
+    ```
+    % pip3 install git+git://github.com/kenjyco/redis-helper
+    ```
 
 ## Intro
 

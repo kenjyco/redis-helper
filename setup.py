@@ -18,6 +18,7 @@ setup(
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     install_requires=[
+        'bg-helper',
         'click>=6.0',
         'dt-helper',
         'fs-helper',
