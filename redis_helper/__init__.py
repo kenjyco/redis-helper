@@ -3,6 +3,7 @@ import fs_helper as fh
 import input_helper as ih
 import settings_helper as sh
 from redis import StrictRedis, ConnectionError
+from time import sleep
 
 
 __doc__ = """Create an instance of `redis_helper.Collection` and use it
@@ -96,6 +97,7 @@ def connect_to_server(url=REDIS_URL, attempt_docker=True, exception=False, show=
     except (ConnectionError, AttributeError):
         if attempt_docker:
             start_docker(exception=exception, show=show)
+            sleep(1)
             REDIS = StrictRedis.from_url(REDIS_URL)
             try:
                 size = REDIS.dbsize()
