@@ -29,6 +29,36 @@ def identity(x):
     return x
 
 
+def _settings_for_docker_ok(exception=False):
+    """Return True if settings.ini has the required values set
+
+    - exception: if True, raise an exception if settings are not ok (after
+      optional sync attempt)
+
+    If any are missing, prompt to sync settings with vimdiff
+    """
+    global SETTINGS
+    missing_settings = set(['container_name', 'image_version', 'port', 'rm']) - set(SETTINGS.keys())
+    if missing_settings != set():
+        message = 'Update your settings.ini to have: {}'.format(sorted(list(missing_settings)))
+        print(message)
+        resp = ih.user_input('Sync settings.ini with vimdiff? (y/n)')
+        if resp.lower().startswith('y'):
+            sh.sync_settings_file(__name__)
+            SETTINGS = sh.get_all_settings(__name__).get(sh.APP_ENV, {})
+            missing_settings = set(['container_name', 'image_version', 'port', 'rm']) - set(SETTINGS.keys())
+            if missing_settings == set():
+                return True
+            elif exception:
+                message = 'Update your settings.ini to have: {}'.format(sorted(list(missing_settings)))
+                raise Exception(message)
+        else:
+            if exception:
+                raise Exception(message)
+    else:
+        return True
+
+
 def start_docker(data_dir=None, aof=True, exception=False, show=False, force=False):
     """Start docker container for redis using values from settings.ini file
 
@@ -39,13 +69,8 @@ def start_docker(data_dir=None, aof=True, exception=False, show=False, force=Fal
     - show: if True, show the docker commands and output
     - force: if True, stop the container and remove it before re-creating
     """
-    missing_settings = set(['container_name', 'image_version', 'port', 'rm']) - set(SETTINGS.keys())
-    if missing_settings != set():
-        message = 'Update your settings.ini to have: {}'.format(sorted(list(missing_settings)))
-        if exception:
-            raise Exception(message)
-        elif show is True:
-            print(message)
+    ok = _settings_for_docker_ok(exception=exception)
+    if not ok:
         return False
     return bh.tools.docker_redis_start(
         SETTINGS['container_name'],
