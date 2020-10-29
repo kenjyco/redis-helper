@@ -272,15 +272,15 @@ class Collection(object):
         pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
         pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size + 1)
         if self._unique_field:
-            pipe.zadd(self._id_zset_key, id_num, unique_val)
-        pipe.zadd(self._ts_zset_key, now, key)
+            pipe.zadd(self._id_zset_key, {unique_val: id_num})
+        pipe.zadd(self._ts_zset_key, {key: now})
         if self._insert_ts:
-            pipe.zadd(self._in_zset_key, now, key)
-        pipe.hmset(key, data)
+            pipe.zadd(self._in_zset_key, {key: now})
+        pipe.hset(key, mapping=data)
         for index_field, base_key in self._index_base_keys.items():
             key_name = self._make_key(base_key, data.get(index_field))
             pipe.sadd(key_name, key)
-            pipe.zincrby(base_key, str(data.get(index_field)), 1)
+            pipe.zincrby(base_key, 1, str(data.get(index_field)))
         pipe.execute()
         self._unlock()
         return key
@@ -767,7 +767,7 @@ class Collection(object):
             for k, v in self.get(hash_id, index_fields).items():
                 old_index_key = self._make_key(self._base_key, k, v)
                 pipe.srem(old_index_key, hash_id)
-                pipe.zincrby(self._index_base_keys[k], v, -1)
+                pipe.zincrby(self._index_base_keys[k], -1, v)
 
         pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
 
@@ -877,9 +877,9 @@ class Collection(object):
                     old_index_key = self._make_key(self._base_key, field, old_value)
                     index_key = self._make_key(self._base_key, field, data[field])
                     pipe.srem(old_index_key, hash_id)
-                    pipe.zincrby(self._index_base_keys[field], old_value, -1)
+                    pipe.zincrby(self._index_base_keys[field], -1, old_value)
                     pipe.sadd(index_key, hash_id)
-                    pipe.zincrby(self._index_base_keys[field], data[field], 1)
+                    pipe.zincrby(self._index_base_keys[field], 1, data[field])
                 elif field in self._json_fields:
                     data[field] = ujson.dumps(data[field])
                 elif field in self._pickle_fields:
@@ -888,8 +888,8 @@ class Collection(object):
                 data.pop(field)
 
         if data:
-            pipe.hmset(hash_id, data)
-            pipe.zadd(self._ts_zset_key, now, hash_id)
+            pipe.hset(hash_id, mapping=data)
+            pipe.zadd(self._ts_zset_key, {hash_id: now})
             pipe.execute()
         self._unlock()
         return changes
@@ -941,7 +941,7 @@ class Collection(object):
 
         for base_key, count_dict in base_key_counts.items():
             for count_name, value in count_dict.items():
-                pipe.zadd(base_key, value, count_name)
+                pipe.zadd(base_key, {count_name: value})
 
         if not self._insert_ts:
             pipe.delete(self._in_zset_key)
@@ -953,7 +953,7 @@ class Collection(object):
             has_insert_ts = set(rh.zshow(self._in_zset_key, withscores=False))
             for hash_id, float_string in rh.zshow(self._ts_zset_key):
                 if hash_id not in has_insert_ts:
-                    pipe.zadd(self._in_zset_key, float_string, ih.decode(hash_id))
+                    pipe.zadd(self._in_zset_key, {ih.decode(hash_id): float_string})
             pipe.execute()
 
         self._unlock()
@@ -1104,7 +1104,7 @@ class Collection(object):
                         stat_base + '--last_size',
                     )
                 else:
-                    pipe.zadd(self._find_searches_zset_key, now, stat_base)
+                    pipe.zadd(self._find_searches_zset_key, {stat_base: now})
                     pipe.hincrby(self._find_stats_hash_key, stat_base + '--count', 1)
                     pipe.hset(
                         self._find_stats_hash_key,
