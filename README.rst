@@ -39,8 +39,31 @@ The first time that ``redis_helper`` is imported, the sample
 `settings.ini <https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini>`__
 file will be copied to the ``~/.config/redis-helper`` directory.
 
-Install Redis and start server
-------------------------------
+::
+
+   [default]
+   image_version = 6-alpine
+
+   [dev]
+   container_name = redis-helper
+   port = 6379
+   rm = False
+   redis_url = redis://localhost:6379/1
+
+   [test]
+   container_name = redis-helper-test
+   port = 6380
+   rm = True
+   redis_url = redis://localhost:6380/9
+
+If docker is installed to your system and your user has permission to
+use it, the `bg-helper docker
+tools <https://github.com/kenjyco/bg-helper#helper-functions-in-bg_helpertools-that-use-docker-if-it-is-installed>`__
+will be used to start a redis container for development or running
+tests, if Redis is not already installed locally.
+
+(Optionally) install Redis and start server locally
+---------------------------------------------------
 
 ::
 
@@ -48,22 +71,25 @@ Install Redis and start server
 
    or
 
-   % brew install redis@3.2
-   % brew services start redis@3.2
+   % brew install redis
+   % brew services start redis
 
-Install latest tag/release of `redis-helper package <https://pypi.python.org/pypi/redis-helper>`__
---------------------------------------------------------------------------------------------------
+Install redis-helper
+--------------------
 
-::
+-  install latest tag/release of `redis-helper
+   package <https://pypi.python.org/pypi/redis-helper>`__
 
-   % pip3 install redis-helper
+   ::
 
-Install latest commit on master of `redis-helper project <https://github.com/kenjyco/redis-helper>`__
------------------------------------------------------------------------------------------------------
+      % pip3 install redis-helper
 
-::
+-  or, install latest commit on master of `redis-helper
+   project <https://github.com/kenjyco/redis-helper>`__
 
-   % pip3 install git+git://github.com/kenjyco/redis-helper
+   ::
+
+      % pip3 install git+git://github.com/kenjyco/redis-helper
 
 Intro
 -----
@@ -109,6 +135,26 @@ Collection will have a name pattern that starts with the ``_base_key``.
        insert_ts=True
    )
 
+   sample = rh.Collection(
+       'ns',
+       'sample',
+       unique_field='name',
+       index_fields='status',
+       json_fields='data',
+       rx_name='\S{4,6}',
+       rx_status='(active|inactive|cancelled)',
+       rx_aws='[a-z]+\-[0-9a-f]+',
+       insert_ts=True
+   )
+
+   uses_sample = rh.Collection(
+       'ns',
+       'uses_sample',
+       index_fields='z',
+       rx_thing='\S{4,6}',
+       reference_fields='thing--ns:sample'
+   )
+
 -  a ``unique_field`` can be specified on a collection if items in the
    collection should not contain duplicate values for that particular
    field
@@ -129,6 +175,13 @@ Collection will have a name pattern that starts with the ``_base_key``.
 -  use ``json_fields`` to specify which fields should be JSON encoded
    before insertion to Redis (using the very fast
    `ujson <https://pypi.python.org/pypi/ujson>`__ library)
+-  use ``rx_{field}`` to specify a regular expression for any field with
+   strict rules for validation
+-  use ``reference_fields`` to specify fields that reference the
+   ``unique_field`` of another collection
+
+   -  uses field–basekey combos
+
 -  use ``pickle_fields`` to specify which fields should be pickled
    before insertion to Redis
 -  set ``insert_ts=True`` to create an additional index to store insert
@@ -259,6 +312,37 @@ The ``update`` method allows you to change values for some fields
    urls.update('web:url:1', _type='fancy', notes='this is a fancy url')
    urls.old_data_for_hash_id('web:url:1')
    urls.old_data_for_unique_value('redis-helper github')
+
+The ``load_ref_data`` option on ``get``, ``get_by_unique_value``, or
+``find`` methods allow you to load the referenced data object from the
+other collection (where ``reference_fields`` are specified)
+
+.. code:: python
+
+   In [1]: sample.add(name='hello', aws='ami-0ad5743816d822b81', status='active')
+   Out[1]: 'ns:sample:1'
+
+   In [2]: uses_sample.add(thing='hello', z=500, y=True)
+   Out[2]: 'ns:uses_sample:1'
+
+   In [3]: uses_sample.get('ns:uses_sample:1')
+   Out[3]: {'thing': 'hello', 'z': 500, 'y': True}
+
+   In [4]: uses_sample.get('ns:uses_sample:1', load_ref_data=True)
+   Out[4]:
+   {'thing': {'name': 'hello',
+     'aws': 'ami-0ad5743816d822b81',
+     'status': 'active',
+     '_id': 'ns:sample:1',
+     '_ts': 20201028210044.875},
+    'z': 500,
+    'y': True}
+
+   In [5]: uses_sample.add(thing='byebye', z=100, y=True)
+   Out[5]: 'ns:uses_sample:2'
+
+   In [6]: uses_sample.get('ns:uses_sample:2', load_ref_data=True)
+   Out[6]: {'thing': 'byebye', 'z': 100, 'y': True}
 
 Tip
 ---
