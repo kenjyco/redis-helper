@@ -4,6 +4,9 @@ from setuptools import setup, find_packages
 with open('README.rst', 'r') as fp:
     long_description = fp.read()
 
+with open('requirements.txt', 'r') as fp:
+    requirements = fp.read().splitlines()
+
 setup(
     name='redis-helper',
     version='0.4.0',
@@ -17,18 +20,7 @@ setup(
     packages=find_packages(),
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
-    install_requires=[
-        'bg-helper',
-        'click>=6.0',
-        'dt-helper',
-        'fs-helper',
-        'hiredis==1.1.0',
-        'input-helper',
-        'pytz',
-        'redis==3.5.3',
-        'settings-helper',
-        'ujson==4.0.1',
-    ],
+    install_requires=requirements,
     include_package_data=True,
     package_dir={'': '.'},
     package_data={
