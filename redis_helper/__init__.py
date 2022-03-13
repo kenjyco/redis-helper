@@ -38,7 +38,10 @@ def _settings_for_docker_ok(exception=False):
     If any are missing, prompt to sync settings with vimdiff
     """
     global SETTINGS
-    missing_settings = set(['container_name', 'image_version', 'port', 'rm']) - set(SETTINGS.keys())
+    settings_keys_for_docker = [
+        'container_name', 'image_version', 'port', 'rm', 'aof', 'redis_data_dir'
+    ]
+    missing_settings = set(settings_keys_for_docker) - set(SETTINGS.keys())
     if missing_settings != set():
         message = 'Update your settings.ini to have: {}'.format(sorted(list(missing_settings)))
         print(message)
@@ -46,7 +49,7 @@ def _settings_for_docker_ok(exception=False):
         if resp.lower().startswith('y'):
             sh.sync_settings_file(__name__)
             SETTINGS = sh.get_all_settings(__name__).get(sh.APP_ENV, {})
-            missing_settings = set(['container_name', 'image_version', 'port', 'rm']) - set(SETTINGS.keys())
+            missing_settings = set(settings_keys_for_docker) - set(SETTINGS.keys())
             if missing_settings == set():
                 return True
             elif exception:
@@ -59,12 +62,9 @@ def _settings_for_docker_ok(exception=False):
         return True
 
 
-def start_docker(data_dir=None, aof=True, exception=False, show=False, force=False):
+def start_docker(exception=False, show=False, force=False):
     """Start docker container for redis using values from settings.ini file
 
-    - data_dir: directory that will map to container's /data
-        - specify absolute path or subdirectory of current directory
-    - aof: if True, use appendonly.aof file
     - exception: if True and docker has an error response, raise an exception
     - show: if True, show the docker commands and output
     - force: if True, stop the container and remove it before re-creating
@@ -77,8 +77,8 @@ def start_docker(data_dir=None, aof=True, exception=False, show=False, force=Fal
         version=SETTINGS['image_version'],
         port=SETTINGS['port'],
         rm=SETTINGS['rm'],
-        data_dir=data_dir,
-        aof=aof,
+        data_dir=SETTINGS['redis_data_dir'],
+        aof=SETTINGS['aof'],
         exception=exception,
         show=show,
         force=force
