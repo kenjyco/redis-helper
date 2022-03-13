@@ -1,8 +1,6 @@
 import random
 import pytest
-import bg_helper as bh
 import redis_helper as rh
-from redis import ConnectionError
 
 
 REDIS_CONNECTED, DBSIZE = rh.connect_to_server()

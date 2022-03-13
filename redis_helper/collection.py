@@ -218,7 +218,7 @@ class Collection(object):
     @property
     def is_locked(self):
         """Return True if the collection is locked"""
-        return True == ih.from_string(ih.decode(rh.REDIS.get(self._lock_string_key)))
+        return ih.from_string(ih.decode(rh.REDIS.get(self._lock_string_key))) is True
 
     def wait_for_unlock(self, sleeptime=.5):
         """Don't return until the collection is unlocked; total sleep time returned
@@ -226,7 +226,7 @@ class Collection(object):
         - sleeptime: amount of time to sleep between checking the lock
         """
         total_sleep = 0
-        while self.is_locked == True:
+        while self.is_locked is True:
             total_sleep += sleeptime
             sleep(sleeptime)
         return total_sleep
@@ -396,7 +396,6 @@ class Collection(object):
         if len(results) == 1:
             return results[0]
         return results
-
 
     def get_hash_id_for_unique_value(self, unique_val):
         """Return the hash_id of the object that has unique_val in _unique_field"""
