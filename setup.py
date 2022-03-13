@@ -9,14 +9,14 @@ with open('requirements.txt', 'r') as fp:
 
 setup(
     name='redis-helper',
-    version='0.4.0',
+    version='0.4.1',
     description='Easily store, index, and modify Python dicts in Redis (with flexible searching)',
     long_description=long_description,
     author='Ken',
     author_email='kenjyco@gmail.com',
     license='MIT',
     url='https://github.com/kenjyco/redis-helper',
-    download_url='https://github.com/kenjyco/redis-helper/tarball/v0.4.0',
+    download_url='https://github.com/kenjyco/redis-helper/tarball/v0.4.1',
     packages=find_packages(),
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
