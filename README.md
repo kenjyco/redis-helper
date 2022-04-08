@@ -1,6 +1,6 @@
 > Note: as of redis-helper v0.4.0, version 3.0 of redis-py is in use, which has
 > backwards incompatible changes withe redis-py 2.x. See
-> <https://github.com/andymccurdy/redis-py#upgrading-from-redis-py-2x-to-30>
+> <https://github.com/redis/redis-py/tree/70ef9ec68f9163c86d4cace2941e2f0ae4ce8525#upgrading-from-redis-py-2x-to-30>
 
 ## About
 
