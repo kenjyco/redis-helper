@@ -37,11 +37,15 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.5',
-        'Topic :: Software Development :: Libraries',
         'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python',
+        'Topic :: Database',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: Utilities',
     ],
-    keywords=['redis', 'dictionary', 'secondary index', 'model', 'log', 'prototype', 'helper']
+    keywords=['redis', 'cli', 'command-line', 'dictionary', 'data', 'database', 'secondary index', 'model', 'prototype', 'event logging', 'dashboard', 'easy modeling', 'helper', 'kenjyco']
 )
