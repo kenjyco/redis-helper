@@ -903,7 +903,7 @@ class Collection(object):
         errors = []
         for field, value in data.items():
             if field in self.field_rx_dict:
-                if not self.field_rx_dict[field].match(value):
+                if not self.field_rx_dict[field].match(str(value)):
                     errors.append((field, value, self.field_rx_dict[field].pattern))
         return errors
 
