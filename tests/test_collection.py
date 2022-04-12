@@ -82,6 +82,12 @@ class TestCollection:
         retrieved = coll1.get(hash_id, 'x')
         assert retrieved == {'x': data['x']}
 
+    def test_add_and_get_with_bool_and_none(self, coll1):
+        data = {'a': None, 'b': True, 'c': False}
+        hash_id = coll1.add(**data)
+        retrieved = coll1.get(hash_id, 'a, b, c')
+        assert retrieved == data
+
     def test_add_and_get_with_json(self, coll2):
         data = generate_coll23_data()
         hash_id = coll2.add(**data)
@@ -170,6 +176,13 @@ class TestCollection:
         assert rh.REDIS.zscore('test:coll4:a', 'blue') == 3.0
         assert len(reds) == 2
         assert coll4.get(a_red_id)['a'] == 'blue'
+
+    def test_update_with_bool_and_none(self, coll1):
+        data = {'a': None, 'b': True, 'c': False}
+        hash_id = coll1.add(**data)
+        coll1.update(hash_id, a=True)
+        value = coll1.get(hash_id, 'a')
+        assert value == {'a': True}
 
     def test_delete_where(self, coll4):
         assert coll4.size == 9

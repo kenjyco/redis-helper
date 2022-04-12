@@ -268,6 +268,9 @@ class Collection(object):
             val = data.get(field)
             if val is not None:
                 data[field] = pickle.dumps(val)
+        for field, value in data.items():
+            if type(value) not in (bytes, str, int, float):
+                data[field] = str(value)
         pipe = rh.REDIS.pipeline()
         pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
         pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_size', self.size + 1)
@@ -871,18 +874,20 @@ class Collection(object):
                 changes.append('{} {}: {} | {}'.format(hash_id, field, old_value, data[field]))
                 if change_history:
                     k = '{}--{}'.format(field, old_timestamp)
-                    pipe.hset(changes_hash_key, k, old_value)
+                    pipe.hset(changes_hash_key, k, str(old_value))
                 if field in self._index_base_keys:
                     old_index_key = self._make_key(self._base_key, field, old_value)
                     index_key = self._make_key(self._base_key, field, data[field])
                     pipe.srem(old_index_key, hash_id)
                     pipe.zincrby(self._index_base_keys[field], -1, old_value)
                     pipe.sadd(index_key, hash_id)
-                    pipe.zincrby(self._index_base_keys[field], 1, data[field])
+                    pipe.zincrby(self._index_base_keys[field], 1, str(data[field]))
                 elif field in self._json_fields:
                     data[field] = ujson.dumps(data[field])
                 elif field in self._pickle_fields:
                     data[field] = pickle.dumps(data[field])
+                else:
+                    data[field] = str(data[field])
             else:
                 data.pop(field)
 
