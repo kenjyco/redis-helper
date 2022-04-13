@@ -769,7 +769,7 @@ class Collection(object):
             for k, v in self.get(hash_id, index_fields).items():
                 old_index_key = self._make_key(self._base_key, k, v)
                 pipe.srem(old_index_key, hash_id)
-                pipe.zincrby(self._index_base_keys[k], -1, v)
+                pipe.zincrby(self._index_base_keys[k], -1, str(v))
 
         pipe.hset('_REDIS_HELPER_COLLECTION', self._base_key + '--last_update', self.now_utc_float)
 
@@ -879,7 +879,7 @@ class Collection(object):
                     old_index_key = self._make_key(self._base_key, field, old_value)
                     index_key = self._make_key(self._base_key, field, data[field])
                     pipe.srem(old_index_key, hash_id)
-                    pipe.zincrby(self._index_base_keys[field], -1, old_value)
+                    pipe.zincrby(self._index_base_keys[field], -1, str(old_value))
                     pipe.sadd(index_key, hash_id)
                     pipe.zincrby(self._index_base_keys[field], 1, str(data[field]))
                 elif field in self._json_fields:
