@@ -7,4 +7,4 @@ input-helper
 pytz
 redis==3.5.3
 settings-helper
-ujson==4.0.1
+ujson==5.2.0
