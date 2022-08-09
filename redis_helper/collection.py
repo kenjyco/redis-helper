@@ -1,5 +1,4 @@
 import pickle
-import ujson
 import random
 import re
 import warnings
@@ -13,6 +12,10 @@ from itertools import chain
 from io import StringIO
 from pprint import pprint
 from redis import ResponseError
+try:
+    from ujson import dumps, loads
+except ImportError:
+    from json import dumps, loads
 
 
 META_FIELDS = {'_id', '_ts'}
@@ -263,7 +266,7 @@ class Collection(object):
         for field in self._json_fields:
             val = data.get(field)
             if val is not None:
-                data[field] = ujson.dumps(val)
+                data[field] = dumps(val)
         for field in self._pickle_fields:
             val = data.get(field)
             if val is not None:
@@ -365,7 +368,7 @@ class Collection(object):
                     pipe.hincrby(self._get_field_stats_hash_key, field, 1)
                 if field in self._json_fields:
                     try:
-                        data[field] = ujson.loads(data[field])
+                        data[field] = loads(data[field])
                     except (ValueError, TypeError):
                         data[field] = ih.decode((data[field]))
                 elif field in self._pickle_fields:
@@ -883,7 +886,7 @@ class Collection(object):
                     pipe.sadd(index_key, hash_id)
                     pipe.zincrby(self._index_base_keys[field], 1, str(data[field]))
                 elif field in self._json_fields:
-                    data[field] = ujson.dumps(data[field])
+                    data[field] = dumps(data[field])
                 elif field in self._pickle_fields:
                     data[field] = pickle.dumps(data[field])
                 else:

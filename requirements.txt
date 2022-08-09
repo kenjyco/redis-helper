@@ -7,4 +7,4 @@ input-helper
 pytz
 redis==3.5.3
 settings-helper
-ujson==5.4.0
+ujson==5.4.0; python_version >= "3.7"
