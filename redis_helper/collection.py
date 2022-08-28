@@ -14,7 +14,7 @@ from pprint import pprint
 from redis import ResponseError
 try:
     from ujson import dumps, loads
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from json import dumps, loads
 
 

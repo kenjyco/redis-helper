@@ -335,7 +335,7 @@ In cases like this you can do the following:
 try:
     import redis_helper as rh
     from redis import ConnectionError as RedisConnectionError
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     SomeCollection = None
 else:
     try:

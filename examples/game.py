@@ -149,7 +149,7 @@ class CharacterController(object):
 
 try:
     from chloop import GetCharLoop
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     logger.error('Install "chloop" package to this virtual environment to run the gameloop')
     GameLoop = None
     gameloop = None
