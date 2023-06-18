@@ -732,6 +732,22 @@ class Collection(object):
         for key in rh.REDIS.scan_iter('{}*'.format(self._base_key)):
             rh.REDIS.delete(key)
 
+    @classmethod
+    def clear_all_collection_locks(cls):
+        """Clear all Collection locks"""
+        lock_keys = []
+        lock_time_keys = []
+        for base_key in cls.init_stats()['init_args'].keys():
+            lock_keys.append(rh.REDIS.scan_iter('{}:_LOCK'.format(base_key)))
+            lock_time_keys.append(rh.REDIS.scan_iter('{}:_LOCK_TIME'.format(base_key)))
+
+        pipe = rh.REDIS.pipeline()
+        for lock_key in chain(*lock_keys):
+            pipe.set(lock_key, 'False')
+        for lock_time_key in chain(*lock_time_keys):
+            pipe.delete(lock_time_key)
+        pipe.execute()
+
     def delete(self, hash_id, pipe=None):
         """Delete a specific hash_id's data and remove from indexes it is in
 
