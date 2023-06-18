@@ -32,6 +32,7 @@ setup(
             'rh-download-scripts=redis_helper.scripts.download_scripts:main',
             'rh-notes=redis_helper.scripts.notes:main',
             'rh-shell=redis_helper.scripts.shell:main',
+            'rh-collection-reports=redis_helper.scripts.collection_reports:main',
             'rh-clear-all-locks=redis_helper.scripts.clear_locks:main',
         ],
     },

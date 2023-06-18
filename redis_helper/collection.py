@@ -620,7 +620,7 @@ class Collection(object):
 
     @classmethod
     def report_all(cls):
-        """A class method to show some info about the classes"""
+        """A class method to show some info about the Collections"""
         pprint(rh.REDIS.hgetall('_REDIS_HELPER_COLLECTION'))
 
     @property
