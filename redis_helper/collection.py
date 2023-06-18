@@ -102,6 +102,8 @@ class Collection(object):
         self._get_id_stats_hash_key = self._make_key(self._base_key, '_get_id_stats')
         self._get_field_stats_hash_key = self._make_key(self._base_key, '_get_field_stats')
         self._lock_string_key = self._make_key(self._base_key, '_LOCK')
+        self._lock_time_string_key = self._make_key(self._base_key, '_LOCK_TIME')
+        self._lock_durations_list_key = self._make_key(self._base_key, '_LOCK_DURATIONS')
         self._find_base_key = self._make_key(self._base_key, '_find')
         self._find_next_id_string_key = self._make_key(self._find_base_key, '_next_id')
         self._find_stats_hash_key = self._make_key(self._find_base_key, '_stats')
@@ -212,11 +214,22 @@ class Collection(object):
 
     def _lock(self):
         """Lock the collection from being modified"""
-        rh.REDIS.set(self._lock_string_key, 'True')
+        pipe = rh.REDIS.pipeline()
+        pipe.set(self._lock_string_key, 'True')
+        pipe.set(self._lock_time_string_key, dh.utc_now_float_string())
+        pipe.execute()
 
     def _unlock(self):
         """Unlock the collection and allow modifications"""
-        rh.REDIS.set(self._lock_string_key, 'False')
+        lock_start = ih.from_string(ih.decode(rh.REDIS.get(self._lock_time_string_key)))
+        pipe = rh.REDIS.pipeline()
+        pipe.set(self._lock_string_key, 'False')
+        if lock_start:
+            now_string = dh.utc_now_float_string()
+            duration = round(ih.from_string(now_string) - lock_start, 5)
+            pipe.delete(self._lock_time_string_key)
+            pipe.lpush(self._lock_durations_list_key, '{}--{}'.format(now_string, duration))
+        pipe.execute()
 
     @property
     def is_locked(self):
