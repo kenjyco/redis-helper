@@ -56,7 +56,8 @@ class Collection(object):
         if rh.REDIS is None:
             connected, _ = rh.connect_to_server()
             if not connected:
-                raise Exception('Unable to connect to {}'.format(rh.REDIS_URL))
+                warnings.warn('\n\nUnable to connect to {}'.format(rh.REDIS_URL))
+                return None
         self._namespace = namespace
         self._name = name
         self._var_name = ih.make_var_name('{}_{}'.format(namespace, name))
