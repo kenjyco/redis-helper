@@ -5,6 +5,11 @@ import input_helper as ih
 import redis_helper as rh
 from functools import partial
 from enum import Enum
+try:
+    ModuleNotFoundError
+except NameError:
+    class ModuleNotFoundError(ImportError):
+        pass
 
 
 LOGFILE = os.path.abspath('log--mmorpg-game.log')

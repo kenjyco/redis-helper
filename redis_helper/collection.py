@@ -13,6 +13,12 @@ from io import StringIO
 from pprint import pprint
 from redis import ResponseError
 try:
+    ModuleNotFoundError
+except NameError:
+    class ModuleNotFoundError(ImportError):
+        pass
+
+try:
     from ujson import dumps, loads
 except (ImportError, ModuleNotFoundError):
     from json import dumps, loads
