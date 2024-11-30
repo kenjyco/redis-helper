@@ -2,7 +2,7 @@
 *.py[cod]
 *.log
 env/
-venv/
+venv*/
 dist/
 build/
 .eggs/
