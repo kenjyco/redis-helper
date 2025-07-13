@@ -389,7 +389,12 @@ class Collection(object):
                 if field in self._json_fields:
                     try:
                         data[field] = loads(data[field])
-                    except (ValueError, TypeError):
+                    except TypeError:
+                        try:
+                            data[field] = loads(ih.decode((data[field])))
+                        except TypeError:
+                            data[field] = ih.decode((data[field]))
+                    except ValueError:
                         data[field] = ih.decode((data[field]))
                 elif field in self._pickle_fields:
                     data[field] = pickle.loads(data[field])
