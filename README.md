@@ -90,6 +90,13 @@ or
     % pip3 install git+git://github.com/kenjyco/redis-helper
     ```
 
+## Dependency Incompatibility
+
+Note that when using hiredis v1.1.0, redis-py v5.0.8 (last release on Python
+3.7) is not compatible. Either use a newer version of hiredis or redis-py 5.0.7
+(on Python 3.7). Newer versions of redis-py (i.e. 5.1.0+ on Python 3.8 - 3.11)
+are compatible with hiredis v1.1.0.
+
 ## Intro
 
 [redis-py]: https://github.com/andymccurdy/redis-py

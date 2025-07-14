@@ -2,8 +2,15 @@ bg-helper
 click>=6.0
 dt-helper
 fs-helper
-hiredis==1.1.0
 input-helper
-redis==3.5.3
 settings-helper
-ujson==5.4.0; python_version >= "3.7"
+
+# The imp module was removed in Python 3.12
+hiredis>=2.1.1; python_version >= "3.12"
+hiredis>=1.1.0; python_version < "3.12"
+
+redis>=4.1.0; python_version >= "3.12"
+redis>=3.5.3
+
+ujson>=5.4.0; python_version >= "3.7"
+ujson==4.3.0; python_version == "3.6"
