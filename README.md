@@ -4,7 +4,7 @@
 [urls demo]: https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00
 [examples]: https://github.com/kenjyco/redis-helper/tree/master/examples
 
-Redis-helper transforms Redis into a human-friendly data exploration and analytics platform that optimizes for **cognitive flow**, **rapid iteration**, and **interactive data exploration**. In the simplest use case, you create an instance of `redis_helper.Collection` and specify any optional fields to index when data is added to enable quick storage and retrieval of Python dicts in Redis. You can filter through indexed fields with flexible arguments to the `find` method and take advantage of automatic timestamps for every entry added. There is also change history for data that has been updated and automatic stats relating to access/query patterns. When field validation is needed, regular expressions may be defined via `rx_{field}` kwargs when creating the collection instance.
+redis-helper transforms Redis into a human-friendly data exploration and analytics platform that optimizes for **cognitive flow**, **rapid iteration**, and **interactive data exploration**. In the simplest use case, you create an instance of `redis_helper.Collection` and specify any optional fields to index when data is added to enable quick storage and retrieval of Python dicts in Redis. You can filter through indexed fields with flexible arguments to the `find` method and take advantage of automatic timestamps for every entry added. There is also change history for data that has been updated and automatic stats relating to access/query patterns. When field validation is needed, regular expressions may be defined via `rx_{field}` kwargs when creating the collection instance.
 
 At its core, redis-helper solves the mental burden of working with Redis directly by providing a **single, powerful abstraction** that handles complex operations behind intuitive, string-based interfaces. It's built for data scientists, analysts, and developers who need to **explore data interactively**, **prototype quickly**, and **deploy confidently** without sacrificing the performance and reliability that Redis provides.
 
@@ -22,7 +22,7 @@ Note that when using hiredis v1.1.0, redis-py v5.0.8 (last release on Python 3.7
 
 ## Configuration
 
-Redis-helper uses a settings.ini file for Docker and connection configuration:
+redis-helper uses a settings.ini file for Docker and connection configuration:
 
 ```ini
 [default]
