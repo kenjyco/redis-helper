@@ -2,19 +2,25 @@
    which has backwards incompatible changes withe redis-py 2.x. See
    https://github.com/redis/redis-py/tree/70ef9ec68f9163c86d4cace2941e2f0ae4ce8525#upgrading-from-redis-py-2x-to-30
 
-About
------
+redis-helper transforms Redis into a human-friendly data exploration and
+analytics platform that optimizes for **cognitive flow**, **rapid
+iteration**, and **interactive data exploration**. In the simplest use
+case, you create an instance of ``redis_helper.Collection`` and specify
+any optional fields to index when data is added to enable quick storage
+and retrieval of Python dicts in Redis. You can filter through indexed
+fields with flexible arguments to the ``find`` method and take advantage
+of automatic timestamps for every entry added. There is also change
+history for data that has been updated and automatic stats relating to
+access/query patterns. When field validation is needed, regular
+expressions may be defined via ``rx_{field}`` kwargs when creating the
+collection instance.
 
-Install redis-helper, create an instance of ``redis_helper.Collection``
-(**the args/kwargs define the model**) and use the ``add``, ``get``,
-``update``, ``delete``, and ``find`` methods to:
-
--  quickly store/retrieve/modify Python dicts in Redis
--  filter through indexed fields with simple/flexible find arguments
--  power real-time dashboards with metrics at a variety of time ranges
--  super-charge event logging and system debugging
--  build FAST prototypes and simulators
--  greatly simplify data access patterns throughout application
+At its core, redis-helper solves the mental burden of working with Redis
+directly by providing a **single, powerful abstraction** that handles
+complex operations behind intuitive, string-based interfaces. It’s built
+for data scientists, analysts, and developers who need to **explore data
+interactively**, **prototype quickly**, and **deploy confidently**
+without sacrificing the performance and reliability that Redis provides.
 
 See the `request logging demo <https://asciinema.org/a/101422?t=1:10>`__
 and `urls
@@ -23,27 +29,28 @@ demo <https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00>`__ (with
 `examples <https://github.com/kenjyco/redis-helper/tree/master/examples>`__
 they reference are **short** and **easy to read**.
 
-The `redis-helper project <https://github.com/kenjyco/redis-helper>`__
-evolved from a `reference Python
-project <https://github.com/kenjyco/beu/tree/4aea6146fc5f01df3e344b9fadddf28b795dac89>`__
-that would be **easy to teach** and follow many practical best practices
-and useful patterns. Main purpose was to have something that was super
-**easy to configure** (a single ``~/.config/redis-helper/settings.ini``
-file for multiple application environments) that did cool things with
-`Redis <http://redis.io/topics/data-types-intro>`__.
-
-The `redis-helper package <https://pypi.python.org/pypi/redis-helper>`__
-provides a ``Collection`` class that was designed to be **easy to
-interact with** in the shell (for exploration, experimentation, and
-debugging). Most methods on a ``Collection`` help **minimize typing**
-(passing multiple arguments in a single delimited string when
-appropriate) and do “the most reasonable thing” whenever possible.
-
-The first time that ``redis_helper`` is imported, the sample
-`settings.ini <https://github.com/kenjyco/redis-helper/blob/master/redis_helper/settings.ini>`__
-file will be copied to the ``~/.config/redis-helper`` directory.
+Install
+-------
 
 ::
+
+   pip install redis-helper
+
+Dependency Incompatibility
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note that when using hiredis v1.1.0, redis-py v5.0.8 (last release on
+Python 3.7) is not compatible. Either use a newer version of hiredis or
+redis-py 5.0.7 (on Python 3.7). Newer versions of redis-py (i.e. 5.1.0+
+on Python 3.8 - 3.11) are compatible with hiredis v1.1.0.
+
+Configuration
+-------------
+
+redis-helper uses a settings.ini file for Docker and connection
+configuration:
+
+.. code:: ini
 
    [default]
    image_version = 6-alpine
@@ -60,53 +67,113 @@ file will be copied to the ``~/.config/redis-helper`` directory.
    rm = True
    redis_url = redis://localhost:6380/9
 
-If docker is installed to your system and your user has permission to
-use it, the `bg-helper docker
-tools <https://github.com/kenjyco/bg-helper#helper-functions-in-bg_helpertools-that-use-docker-if-it-is-installed>`__
-will be used to start a redis container for development or running
-tests, if Redis is not already installed locally.
+..
 
-(Optionally) install Redis and start server locally
----------------------------------------------------
+   On first use, the default settings.ini file is copied to
+   ``~/.config/redis-helper/settings.ini``
 
-::
+The library automatically starts Redis via Docker if no connection is
+available, using these settings to configure container behavior,
+persistence options, and connection parameters for both development and
+testing environments.
 
-   % sudo apt-get install -y redis-server
+Use the ``APP_ENV`` environment variable to specify which section of the
+``settings.ini`` file your settings will be loaded from. Any settings in
+the ``default`` section can be overwritten if explicity set in another
+section. If no ``APP_ENV`` is explicitly set, ``dev`` is assumed.
 
-   or
+QuickStart
+----------
 
-   % brew install redis
-   % brew services start redis
+.. code:: python
 
-Install redis-helper
---------------------
+   import redis_helper as rh
 
--  install latest tag/release of `redis-helper
-   package <https://pypi.python.org/pypi/redis-helper>`__
+   # Create a collection for web request logs with validation
+   ANALYTICS_REQUESTS = rh.Collection(
+       'analytics', 'requests',
+       unique_field='request_id',
+       index_fields='status, method, host, user_id',
+       json_fields='headers, response_data',
+       rx_status=r'[1-5][0-9][0-9]',         # Validate HTTP status codes
+       rx_method=r'(GET|POST|PUT|DELETE)',   # Validate HTTP methods
+       insert_ts=True                        # Track creation vs modification time
+   )
 
-   ::
+   # Add some sample data
+   ANALYTICS_REQUESTS.add(
+       request_id='req_123',
+       method='GET',
+       status=200,
+       host='api.example.com',
+       uri='/users/123',
+       user_id='user_456',
+       response_time=0.045,
+       headers={'user-agent': 'curl/7.64.1', 'accept': '*/*'},
+       response_data={'id': 123, 'name': 'John Doe', 'active': True}
+   )
 
-      % pip3 install redis-helper
+   ANALYTICS_REQUESTS.add(
+       request_id='req_124',
+       method='POST',
+       status=400,
+       host='api.example.com',
+       uri='/users',
+       user_id='user_789',
+       response_time=0.012
+   )
 
--  or, install latest commit on master of `redis-helper
-   project <https://github.com/kenjyco/redis-helper>`__
+   ANALYTICS_REQUESTS.add(
+       request_id='req_125',
+       method='GET',
+       status=200,
+       host='web.example.com',
+       uri='/dashboard',
+       user_id='user_456',
+       response_time=0.156
+   )
 
-   ::
+   # Interactive exploration with powerful queries
+   recent_errors = ANALYTICS_REQUESTS.find('status:400', since='1:hour')
+   api_requests = ANALYTICS_REQUESTS.find('host:api.example.com, method:GET')
 
-      % pip3 install git+git://github.com/kenjyco/redis-helper
+   # Multi-temporal analytics in a single query
+   traffic_by_timeframe = ANALYTICS_REQUESTS.find('status:200', count=True, since='1:hour, 15:min, 5:min')
+   # Returns: {'1:hour': 1234, '15:min': 345, '5:min': 89}
 
-Intro
------
+   # Human-readable formatting for reports
+   print(ANALYTICS_REQUESTS.random(item_format='{method} {uri} -> {status} ({response_time}s) at {_ts}'))
+   # Output: GET /users/123 -> 200 (0.045s) at 1642262202.123
 
-`Redis <http://redis.io/topics/data-types-intro>`__ is a fast in-memory
-**data structure server**, where each stored object is referenced by a
-key name. Objects in Redis correspond to one of several basic types,
-each having their own set of specialized commands to perform operations.
-The `redis Python package <https://github.com/andymccurdy/redis-py>`__
-provides the
+   # Get data with admin timestamp formatting ("%a %m/%d/%Y %I:%M:%S %p")
+   user_activity = ANALYTICS_REQUESTS.get('req_123', admin_fmt=True)
+   print(user_activity['_ts'])  # Output: Mon 01/15/2024 02:30:22 PM
+
+   # System introspection and monitoring
+   print(f"Total requests: {ANALYTICS_REQUESTS.size}")
+   print(f"Index distribution: {ANALYTICS_REQUESTS.index_field_info()}")
+   print(f"Most accessed endpoints: {ANALYTICS_REQUESTS.get_stats()}")
+
+Running this example gives you immediate access to sophisticated data
+analytics capabilities with automatic timestamping, flexible querying,
+built-in statistics, and human-optimized output formatting. The system
+requires no configuration beyond basic field categorization and
+automatically handles Redis connection management, key generation, and
+data serialization.
+
+Concepts
+--------
+
+Redis is a fast in-memory **data structure server**, where each stored
+object is referenced by a key name. Objects in Redis correspond to one
+of several basic types, each having their own set of specialized
+commands to perform operations. The `redis Python
+package <https://github.com/andymccurdy/redis-py>`__ provides the
 `StrictRedis <https://redis-py.readthedocs.org/en/latest/#redis.StrictRedis>`__
 class, which contains methods that correspond to all of the Redis server
-commands.
+commands, which redis-helper uses under the hood.
+
+Tested for Python 3.5 - 3.13 against Redis 6 docker container.
 
 When initializing Collection objects, you must specify the “namespace”
 and “name” of the collection (which are used to create the internally
@@ -177,8 +244,7 @@ Collection will have a name pattern that starts with the ``_base_key``.
       strings, as the values themselves are part of the index keys
 
 -  use ``json_fields`` to specify which fields should be JSON encoded
-   before insertion to Redis (using the very fast
-   `ujson <https://pypi.python.org/pypi/ujson>`__ library)
+   before insertion to Redis
 -  use ``rx_{field}`` to specify a regular expression for any field with
    strict rules for validation
 -  use ``reference_fields`` to specify fields that reference the
@@ -260,7 +326,7 @@ the number of fields requested.
 
 The ``find`` method allows you to return data for items in the
 collection that match some set of search criteria. Multiple search terms
-(i.e. ``index_field:value`` pairs) maybe be passed in the ``terms``
+(i.e. ``index_field:value`` pairs) maybe be passed in the ``terms``
 parameter, as long as they are separated by one of ``,`` ``;`` ``|``.
 Any fields specified in the ``get_fields`` parameter are passed along to
 the ``get`` method (when the actual fetching takes place).
@@ -380,58 +446,8 @@ Then in whatever function, you can just do:
 
        # Do stuff with SomeCollection
 
-Local development setup
------------------------
-
-::
-
-   % git clone https://github.com/kenjyco/redis-helper
-   % cd redis-helper
-   % ./dev-setup.bash
-
-The
-`dev-setup.bash <https://github.com/kenjyco/redis-helper/blob/master/dev-setup.bash>`__
-script will create a virtual environment in the ``./venv`` directory
-with extra dependencies (ipython, pdbpp, pytest), then copy
-``settings.ini`` to the ``~/.config/redis-helper`` directory.
-
-Running tests in development setup
-----------------------------------
-
-The
-`setup.cfg <https://github.com/kenjyco/redis-helper/blob/master/setup.cfg>`__
-file contains the options for ``py.test``, currently ``-vsx -rs --pdb``.
-
-The ``-vsx -rs --pdb`` options will run tests in a verbose manner and
-output the reason why tests were skipped (if any were skipped). If there
-are any failing tests, ``py.test`` will stop on the first failure and
-drop you into a `pdb++ <https://pypi.python.org/pypi/pdbpp/>`__ debugger
-session.
-
-See the `debugging
-section <https://github.com/kenjyco/redis-helper#settings-environments-testing-and-debugging>`__
-of the README for tips on using the debugger and setting breakpoints (in
-the actual `project
-code <https://github.com/kenjyco/redis-helper/tree/master/redis_helper>`__,
-or in the `test
-code <https://github.com/kenjyco/redis-helper/tree/master/tests>`__).
-
-::
-
-   % venv/bin/py.test
-
-or
-
-::
-
-   % venv/bin/python3 setup.py test
-
-..
-
-   Note: This option requires ``setuptools`` to be installed.
-
-Usage
------
+Console Scripts
+---------------
 
 The ``rh-download-examples``, ``rh-download-scripts``, ``rh-notes``, and
 ``rh-shell`` scripts are provided.
@@ -472,173 +488,552 @@ The ``rh-download-examples``, ``rh-download-scripts``, ``rh-notes``, and
    Options:
      --help  Show this message and exit.
 
-.. code:: python
+API Overview
+------------
 
-   >>> import redis_helper as rh
-   >>> collection = rh.Collection(..., index_fields='field1, field3')
-   >>> hash_id = collection.add(field1='', field2='', field3='', ...)
-   >>> collection.add(...)
-   >>> collection.add(...)
-   >>> collection.update(hash_id, field1='', field4='', ...)
-   >>> change_history = collection.old_data_for_hash_id(hash_id)
-   >>> data = collection.get(hash_id)
-   >>> some_data = collection.get(hash_id, 'field1, field3')
-   >>> results = collection.find(...)
-   >>> results2 = collection.find('field1:val, field3:val', ...)
-   >>> results3 = collection.find(..., get_fields='field2, field4')
-   >>> counts = collection.find(count=True, ...)
-   >>> top_indexed = collection.index_field_info()
-   >>> collection.delete(hash_id, ...)
+Top-Level Functions
+~~~~~~~~~~~~~~~~~~~
 
-Basics - Part 1 (request logging demo)
---------------------------------------
+-  **``zshow(key, start=0, end=-1, desc=True, withscores=True)``** -
+   Wrapper to Redis ZRANGE for debugging
 
-`Demo <https://asciinema.org/a/101422?t=1:10>`__ bookmarks:
+   -  ``key`` (str): Redis sorted set key to examine
+   -  ``start`` (int): Starting index
+   -  ``end`` (int): Ending index
+   -  ``desc`` (bool): Descending order
+   -  ``withscores`` (bool): Include scores in output
+   -  Returns: List of items from sorted set
+   -  Internal calls: None
 
--  `1:10 <https://asciinema.org/a/101422?t=1:10>`__ is when the
-   ``ipython`` session is started with
-   ``venv/bin/ipython -i request_logs.py``
--  `3:14 <https://asciinema.org/a/101422?t=3:14>`__ is when a second
-   ``ipython`` session is started (in a separate tmux pane) to simulate
-   a steady stream of requests with
-   ``slow_trickle_requests(randomsleep=True, show=True)``
--  `4:22 <https://asciinema.org/a/101422?t=4:22>`__ is when the
-   ``index_field_info`` method is used to get the latest counts of top
-   indexed items
--  `6:11 <https://asciinema.org/a/101422?t=6:11>`__ is when
-   ``slow_trickle_requests(.001)`` is run to simulate a large quick
-   burst in traffic
--  `7:00 <https://asciinema.org/a/101422?t=7:00>`__ is when multiple
-   values are passed in the ``since`` argument of ``find``\ …
-   ``request_logs.find(count=True, since='5:min, 1:min, 30:sec')``
--  `8:37 <https://asciinema.org/a/101422?t=8:37>`__ is when ``get`` and
-   ``get_by_position`` methods are used with a variety of arguments to
-   change the structure of what’s returned
--  `10:33 <https://asciinema.org/a/101422?t=10:33>`__ is when the
-   ``redis_helper.ADMIN_TIMEZONE`` is changed at run time from
-   ``America/Chicago`` to ``Europe/London``
--  `11:27 <https://asciinema.org/a/101422?t=11:27>`__ is when ``find``
-   is used with a variety of arguments to change the structure of what’s
-   returned
--  `14:30 <https://asciinema.org/a/101422?t=14:30>`__ is when ``find``
-   is used with multiple search terms and multiple ``since`` values…
-   ``request_logs.find('host:dogs.com, uri:/breeds', count=True, since='5:min, 1:min, 10:sec')``
--  `15:54 <https://asciinema.org/a/101422?t=15:54>`__ is when the
-   ``update`` method is used to modify data and change history is
-   retrieved with the ``old_data_for_hash_id`` method
+-  **``identity(x)``** - Return input value unmodified (null object
+   pattern)
 
-The first demo walks through the following:
+   -  ``x``: Any value to return unchanged
+   -  Returns: The input value x
+   -  Internal calls: None
 
--  creating a virtual environment, installing redis-helper, and
-   downloading example files
+-  **``start_docker(exception=False, show=False, force=False)``** -
+   Start Redis Docker container using settings.ini configuration
 
-   ::
+   -  ``exception`` (bool): Raise exception if Docker has error response
+   -  ``show`` (bool): Show Docker commands and output
+   -  ``force`` (bool): Stop and remove container before recreating
+   -  Returns: Boolean indicating success
+   -  Internal calls: ``bh.tools.docker_redis_start()``
 
-      $ python3 -m venv venv
-      $ venv/bin/pip3 install redis-helper ipython
-      $ venv/bin/rh-download-examples
-      $ cat ~/.config/redis-helper/settings.ini
-      $ venv/bin/ipython -i request_logs.py
+-  **``stop_docker(exception=False, show=False)``** - Stop Redis Docker
+   container
 
--  using the sample ``Collection`` defined in
-   `request_logs.py <https://github.com/kenjyco/redis-helper/blob/master/examples/request_logs.py>`__
-   to
+   -  ``exception`` (bool): Raise exception if Docker has error response
+   -  ``show`` (bool): Show Docker commands and output
+   -  Returns: Boolean indicating success
+   -  Internal calls: ``bh.tools.docker_stop()``
 
-   -  show values of some properties on a ``Collection``
+-  **``connect_to_server(url=REDIS_URL, attempt_docker=True, exception=False, show=False)``**
+   - Connect to Redis server and set global REDIS variable
 
-      -  ``redis_helper.Collection._base_key``
-      -  ``redis_helper.Collection.now_pretty``
-      -  ``redis_helper.Collection.now_utc_float``
-      -  ``redis_helper.Collection.keyspace``
-      -  ``redis_helper.Collection.size``
-      -  ``redis_helper.Collection.first``
-      -  ``redis_helper.Collection.last``
+   -  ``url`` (str): Redis URL (redis://[:password@]host:port/db)
+   -  ``attempt_docker`` (bool): Start Docker if connection fails
+   -  ``exception`` (bool): Raise exception if unable to connect
+   -  ``show`` (bool): Show Docker commands and output
+   -  Returns: Tuple of (success_boolean, db_size)
+   -  Internal calls: ``start_docker()``
 
-   -  show values of some settings from ``redis_helper``
+Collection Creation and Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-      -  ``redis_helper.APP_ENV``
-      -  ``redis_helper.REDIS_URL``
-      -  ``redis_helper.REDIS``
-      -  ``redis_helper.SETTINGS_FILE``
-      -  ``redis_helper.ADMIN_TIMEZONE``
+-  **``Collection(namespace, name, unique_field='', index_fields='', json_fields='', pickle_fields='', expected_fields='', reference_fields='', insert_ts=False, list_name='', **kwargs)``**
+   - Create and configure a new collection instance
 
-   -  show output from some methods on a ``Collection``
+   -  ``namespace`` (str): Top-level organization category (e.g.,
+      ‘analytics’, ‘app’, ‘logs’)
+   -  ``name`` (str): Specific collection identifier within namespace
+   -  ``unique_field`` (str, optional): Field name that enforces
+      uniqueness constraints
+   -  ``index_fields`` (str, optional): Comma/semicolon/pipe-separated
+      fields for fast lookups
+   -  ``json_fields`` (str, optional): Fields that should be
+      automatically JSON serialized/deserialized
+   -  ``pickle_fields`` (str, optional): Fields for complex Python
+      objects requiring pickle serialization
+   -  ``expected_fields`` (str, optional): Fields that are likely to be
+      used (for optimization)
+   -  ``reference_fields`` (str, optional): Fields that reference unique
+      values in other collections
+   -  ``insert_ts`` (bool): Track creation time separately from
+      modification time
+   -  ``list_name`` (str, optional): Optional list name for specialized
+      use cases
+   -  ``**kwargs``: Additional configuration including ``rx_{field}``
+      regex validation patterns
+   -  Returns: Collection instance with all Redis keys and configuration
+      established
+   -  Internal calls: ``rh.connect_to_server()``,
+      ``ih.make_var_name()``, ``ih.string_to_set()``,
+      ``self.get_model()``
 
-      -  ``redis_helper.Collection.index_field_info()``
-      -  ``redis_helper.Collection.find()``
-      -  ``redis_helper.Collection.find(count=True)``
-      -  ``redis_helper.Collection.find(count=True, since='30:sec')``
-      -  ``redis_helper.Collection.find(since='30:sec')``
-      -  ``redis_helper.Collection.find(since='30:sec', admin_fmt=True)``
-      -  ``redis_helper.Collection.find(count=True, since='5:min, 1:min, 30:sec')``
-      -  ``redis_helper.Collection.find('index_field:value')``
-      -  ``redis_helper.Collection.find('index_field:value', all_fields=True, limit=2)``
-      -  ``redis_helper.Collection.find('index_field:value', all_fields=True, limit=2, admin_fmt=True, item_format='{_ts} -> {_id}')``
-      -  ``redis_helper.Collection.find('index_field:value', get_fields='field1, field2', include_meta=False)``
-      -  ``redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True)``
-      -  ``redis_helper.Collection.find('index_field1:value1, index_field2:value2', count=True, since='5:min, 1:min, 10:sec')``
-      -  ``redis_helper.Collection.get(hash_id)``
-      -  ``redis_helper.Collection.get(hash_id, 'field1,field2,field3')``
-      -  ``redis_helper.Collection.get(hash_id, include_meta=True)``
-      -  ``redis_helper.Collection.get(hash_id, include_meta=True, fields='field1, field2')``
-      -  ``redis_helper.Collection.get(hash_id, include_meta=True, item_format='{_ts} -> {_id}')``
-      -  ``redis_helper.Collection.get_by_position(0)``
-      -  ``redis_helper.Collection.get_by_position(0, include_meta=True, admin_fmt=True)``
-      -  ``redis_helper.Collection.update(hash_id, field1='value1', field2='value2')``
-      -  ``redis_helper.Collection.old_data_for_hash_id(hash_id)``
+Data Manipulation
+~~~~~~~~~~~~~~~~~
 
-Basics - Part 2 (urls demo, with unique field)
-----------------------------------------------
+-  **``Collection.add(**data)``** - Add new item with automatic indexing
+   and timestamping
 
-`Demo <https://asciinema.org/a/75kl95ty9vg2jl93pfz9fbs9q?t=1:00>`__
-bookmarks:
+   -  ``**data``: Arbitrary keyword arguments representing field-value
+      pairs
+   -  Returns: String hash ID for the created item
+   -  Internal calls: ``self.validate()``, ``self.wait_for_unlock()``
 
--  ``TODO``
+-  **``Collection.get(hash_ids, fields='', include_meta=False, timestamp_formatter=rh.identity, ts_fmt=None, ts_tz=None, admin_fmt=False, item_format='', insert_ts=False, load_ref_data=False, update_get_stats=True)``**
+   - Retrieve items with flexible formatting
 
-The second demo walks through the following:
+   -  ``hash_ids`` (str or list): Single hash ID or list of hash IDs to
+      retrieve
+   -  ``fields`` (str): Comma-separated field names to retrieve (empty =
+      all fields)
+   -  ``include_meta`` (bool): Include system fields like ``_id`` and
+      ``_ts``
+   -  ``timestamp_formatter``: Function to format timestamp values
+   -  ``ts_fmt`` (str): Timestamp format string
+   -  ``ts_tz`` (str): Timezone for timestamp formatting
+   -  ``admin_fmt`` (bool): Use admin formatting from settings
+   -  ``item_format`` (str): Template string for custom output
+      formatting
+   -  ``insert_ts`` (bool): Use insertion time instead of modification
+      time
+   -  ``load_ref_data`` (bool): Resolve reference fields to actual
+      referenced data
+   -  ``update_get_stats`` (bool): Track access statistics for this
+      operation
+   -  Returns: Dictionary or list of dictionaries with requested data
+   -  Internal calls: ``ih.string_to_list()``, ``ih.decode()``,
+      ``ih.string_to_set()``,
+      ``dh.get_timestamp_formatter_from_args()``, ``ih.from_string()``
 
--  using the sample ``Collection`` defined in
-   `urls.py <https://github.com/kenjyco/redis-helper/blob/master/examples/urls.py>`__
-   to
+-  **``Collection.update(hash_id, change_history=True, **data)``** -
+   Modify existing item with change tracking
 
-   -  ``TODO``
+   -  ``hash_id`` (str): Target item identifier
+   -  ``change_history`` (bool): Preserve previous values with
+      timestamps
+   -  ``**data``: Field-value pairs to update
+   -  Returns: List of human-readable change descriptions
+   -  Internal calls: ``self.validate()``, ``self.wait_for_unlock()``,
+      ``self.get()``, ``ih.from_string()``
 
-Settings, environments, testing, and debugging
-----------------------------------------------
+-  **``Collection.delete(hash_id, pipe=None)``** - Remove single item
+   and clean up indexes
 
-To trigger a debugger session at a specific place in the `project
-code <https://github.com/kenjyco/redis-helper/tree/master/redis_helper>`__,
-insert the following, one line above where you want to inspect
+   -  ``hash_id`` (str): Item to remove
+   -  ``pipe``: Optional Redis pipeline for batching
+   -  Returns: Result of pipeline execution if pipe used, otherwise None
+   -  Internal calls: ``self.wait_for_unlock()``, ``self.get()``
 
-::
+-  **``Collection.delete_many(*hash_ids)``** - Remove multiple items
+   efficiently
 
-   import pdb; pdb.set_trace()
+   -  ``*hash_ids``: Variable number of hash IDs to delete
+   -  Returns: Last result from pipeline execution
+   -  Internal calls: ``self.wait_for_unlock()``, ``self.delete()``
 
-To start the debugger inside `test
-code <https://github.com/kenjyco/redis-helper/tree/master/tests>`__, use
+-  **``Collection.delete_where(terms='', limit=None, desc=False, insert_ts=False)``**
+   - Delete items matching query criteria
 
-::
+   -  ``terms`` (str): Query string like ‘field1:value1, field2:value2’
+   -  ``limit`` (int): Maximum number of items to delete
+   -  ``desc`` (bool): Process items in descending order
+   -  ``insert_ts`` (bool): Use insertion timestamps for ordering
+   -  Returns: Result from delete_many operation
+   -  Internal calls: ``self.find()``, ``self.delete_many()``
 
-   pytest.set_trace()
+-  **``Collection.delete_to(score=None, ts='', tz=None, insert_ts=False)``**
+   - Delete items up to specified timestamp
 
--  use ``(l)ist`` to list context lines
--  use ``(n)ext`` to move on to the next statement
--  use ``(s)tep`` to step into a function
--  use ``(c)ontinue`` to continue to next break point
-   (i.e. ``set_trace()`` lines in your code)
--  use ``sticky`` to toggle sticky mode (to constantly show the
-   currently executing code as you move through with the debugger)
--  use ``pp`` to pretty print a variable or statement
+   -  ``score`` (float): Timestamp score for deletion boundary
+   -  ``ts`` (str): Human-readable timestamp (‘2017-01-01’, ‘2017-02-03
+      7:15:00’)
+   -  ``tz`` (str): Timezone for timestamp interpretation
+   -  ``insert_ts`` (bool): Use insertion timestamps instead of
+      modification timestamps
+   -  Returns: Result from delete_many operation
+   -  Internal calls: ``dh.date_string_to_utc_float_string()``,
+      ``ih.decode()``, ``self.delete_many()``
 
-If the redis server at ``redis_url`` (in the **test section** of
-``~/.config/redis-server/settings.ini``) is not running or is not empty,
-redis server tests will be skipped.
+Query Operations
+~~~~~~~~~~~~~~~~
 
-Use the ``APP_ENV`` environment variable to specify which section of the
-``settings.ini`` file your settings will be loaded from. Any settings in
-the ``default`` section can be overwritten if explicity set in another
-section.
+-  **``Collection.find(terms='', start=None, end=None, limit=20, desc=None, get_fields='', all_fields=False, count=False, ts_fmt=None, ts_tz=None, admin_fmt=False, start_ts='', end_ts='', since='', until='', include_meta=True, item_format='', insert_ts=False, load_ref_data=False, post_fetch_sort_key='', sort_key_default_val='')``**
+   - Flexible search with temporal filtering
 
--  if no ``APP_ENV`` is explicitly set, ``dev`` is assumed
--  the ``APP_ENV`` setting is overwritten to be ``test`` no matter what
-   was set when calling ``py.test`` tests
+   -  ``terms`` (str): Query string like ‘field1:value1, field2:value2’
+      with flexible delimiters
+   -  ``start`` (int): Starting position for result slice
+   -  ``end`` (int): Ending position for result slice
+   -  ``limit`` (int): Maximum results to return
+   -  ``desc`` (bool): Sort order (None for automatic inference, True
+      for recent-first)
+   -  ``get_fields`` (str): Specific fields to retrieve
+   -  ``all_fields`` (bool): Include all fields regardless of
+      configuration
+   -  ``count`` (bool): Return counts instead of data
+   -  ``ts_fmt`` (str): Timestamp format string
+   -  ``ts_tz`` (str): Timezone for timestamp formatting
+   -  ``admin_fmt`` (bool): Use admin formatting from settings
+   -  ``start_ts`` (str): Absolute start timestamp
+   -  ``end_ts`` (str): Absolute end timestamp
+   -  ``since`` (str): Relative time expressions (‘1:hour’,
+      ‘30:minutes’, ‘5:min, 1:min, 30:sec’)
+   -  ``until`` (str): Relative end time expression
+   -  ``include_meta`` (bool): Include system metadata fields
+   -  ``item_format`` (str): Custom output formatting template
+   -  ``insert_ts`` (bool): Use insertion time instead of modification
+      time
+   -  ``load_ref_data`` (bool): Resolve reference fields
+   -  ``post_fetch_sort_key`` (str): Field to sort results by after
+      retrieval
+   -  ``sort_key_default_val``: Default value for missing sort keys
+   -  Returns: List of matching items or dictionary of counts by time
+      range
+   -  Internal calls: ``dh.get_time_ranges_and_args()``,
+      ``dh.get_timestamp_formatter_from_args()``, ``self.get()``,
+      ``ih.decode()``
+
+-  **``Collection.random(terms='', start=None, end=None, ts_fmt=None, ts_tz=None, admin_fmt=False, start_ts='', end_ts='', since='', until='', **get_kwargs)``**
+   - Get random sample with same filtering options as find
+
+   -  ``terms`` (str): Query string like ‘field1:value1, field2:value2’
+      with flexible delimiters
+   -  ``start`` (int): Starting position for result slice
+   -  ``end`` (int): Ending position for result slice
+   -  ``ts_fmt`` (str): Timestamp format string
+   -  ``ts_tz`` (str): Timezone for timestamp formatting
+   -  ``admin_fmt`` (bool): Use admin formatting from settings
+   -  ``start_ts`` (str): Absolute start timestamp
+   -  ``end_ts`` (str): Absolute end timestamp
+   -  ``since`` (str): Relative time expressions (‘1:hour’,
+      ‘30:minutes’, ‘5:min, 1:min, 30:sec’)
+   -  ``until`` (str): Relative end time expression
+   -  ``**get_kwargs``: Additional parameters accepted by the get()
+      method
+   -  Returns: Single random item matching criteria
+   -  Internal calls: ``dh.get_time_ranges_and_args()``,
+      ``dh.get_timestamp_formatter_from_args()``, ``self.get()``,
+      ``self.get_by_position()``
+
+Specific Access Methods
+~~~~~~~~~~~~~~~~~~~~~~~
+
+-  **``Collection.get_by_unique_value(unique_val, fields='', include_meta=False, timestamp_formatter=rh.identity, ts_fmt=None, ts_tz=None, admin_fmt=False, item_format='', insert_ts=False, load_ref_data=False, update_get_stats=True)``**
+   - Retrieve item by unique field value
+
+   -  ``unique_val``: Value to search for in the unique field
+   -  All other parameters same as ``get()`` method
+   -  Returns: Dictionary with item data or empty dict if not found
+   -  Internal calls: ``self.get_hash_id_for_unique_value()``,
+      ``self.get()``
+
+-  **``Collection.get_by_position(pos, **kwargs)``** - Get item by
+   position (most recent first by default)
+
+   -  ``pos`` (int): Position index (0 = most recent)
+   -  ``**kwargs``: All parameters accepted by ``get()`` method
+   -  Returns: Dictionary with item data
+   -  Internal calls: ``self.get()``
+
+-  **``Collection.get_by_slice(start=None, stop=None, **kwargs)``** -
+   Get slice of items by position
+
+   -  ``start`` (int): Starting position
+   -  ``stop`` (int): Ending position
+   -  ``**kwargs``: All parameters accepted by ``get()`` method
+   -  Returns: List of dictionaries
+   -  Internal calls: ``self.get()``
+
+-  **``Collection.get_hash_id_for_unique_value(unique_val)``** - Get
+   hash ID for unique field value
+
+   -  ``unique_val``: Value to look up
+   -  Returns: Hash ID string or None if not found
+   -  Internal calls: None
+
+Collection Management
+~~~~~~~~~~~~~~~~~~~~~
+
+-  **``Collection.get_model(cls, base_key=None, init_args=None)``**
+   (classmethod) - Reconstruct Collection instance from Redis state
+
+   -  ``base_key`` (str): Redis base key for the collection
+   -  ``init_args`` (str): Initialization arguments string
+   -  Returns: Collection instance
+   -  Internal calls: ``ih.decode()``
+
+-  **``Collection.select_models(cls, named=False)``** (classmethod) -
+   Interactive collection chooser
+
+   -  ``named`` (bool): Return dictionary with collection names as keys
+   -  Returns: Selected Collection instance(s)
+   -  Internal calls: ``cls.init_stats()``, ``ih.make_selections()``,
+      ``cls.get_model()``
+
+-  **``Collection.select_model(cls)``** (classmethod) - Select single
+   collection interactively
+
+   -  Returns: Single Collection instance
+   -  Internal calls: ``cls.select_models()``
+
+-  **``Collection.select_and_modify(menu_item_format='', action='update', prompt='', update_fields='', **find_kwargs)``**
+   - Interactive bulk operations
+
+   -  ``menu_item_format`` (str): Template for displaying items in
+      selection menu
+   -  ``action`` (str): Operation type (‘update’ or ‘delete’)
+   -  ``prompt`` (str): Custom prompt for user selection
+   -  ``update_fields`` (str): Fields to modify during update operations
+   -  ``**find_kwargs``: All parameters accepted by ``find()`` method
+   -  Returns: Results of selected operations
+   -  Internal calls: ``ih.string_to_set()``,
+      ``ih.get_keys_in_string()``, ``self.find()``,
+      ``ih.make_selections()``, ``ih.user_input()``, ``self.update()``,
+      ``self.delete()``
+
+Validation and Maintenance
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-  **``Collection.validate(**data)``** - Validate fields against
+   configured regex patterns
+
+   -  ``**data``: Field-value pairs to validate
+   -  Returns: List of validation error tuples (field, value, pattern)
+   -  Internal calls: None
+
+-  **``Collection.reindex()``** - Rebuild all search indexes from
+   current data
+
+   -  Returns: None
+   -  Internal calls: ``self.wait_for_unlock()``, ``ih.decode()``,
+      ``rh.zshow()``, ``self.get()``
+
+-  **``Collection.clear_keyspace()``** - Remove all data and indexes for
+   this collection
+
+   -  Returns: None
+   -  Internal calls: None
+
+System Properties and Introspection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-  **``Collection.namespace``** (property) - Collection’s namespace
+
+   -  Returns: String namespace value
+   -  Internal calls: None
+
+-  **``Collection.name``** (property) - Collection’s name
+
+   -  Returns: String name value
+   -  Internal calls: None
+
+-  **``Collection.var_name``** (property) - Variable-safe name for
+   collection
+
+   -  Returns: String variable name
+   -  Internal calls: None
+
+-  **``Collection.size``** (property) - Current number of items in
+   collection
+
+   -  Returns: Integer count
+   -  Internal calls: None
+
+-  **``Collection.last``** (property) - Most recently modified item
+
+   -  Returns: Dictionary with item data
+   -  Internal calls: ``self.get_by_position()``
+
+-  **``Collection.last_admin``** (property) - Most recent item with
+   admin timestamp formatting
+
+   -  Returns: Dictionary with formatted timestamps
+   -  Internal calls: ``self.get_by_position()``
+
+-  **``Collection.first``** (property) - Oldest item in collection
+
+   -  Returns: Dictionary with item data
+   -  Internal calls: ``self.get_by_position()``
+
+-  **``Collection.first_admin``** (property) - Oldest item with admin
+   timestamp formatting
+
+   -  Returns: Dictionary with formatted timestamps
+   -  Internal calls: ``self.get_by_position()``
+
+-  **``Collection.last_update``** (property) - Timestamp of last
+   collection modification
+
+   -  Returns: Float timestamp
+   -  Internal calls: ``ih.decode()``
+
+-  **``Collection.last_update_admin``** (property) - Formatted timestamp
+   of last modification
+
+   -  Returns: Human-readable timestamp string
+   -  Internal calls: ``self.last_update``, ``dh.utc_float_to_pretty()``
+
+-  **``Collection.now_pretty``** (property) - Current timestamp in admin
+   format
+
+   -  Returns: Human-readable current timestamp
+   -  Internal calls: ``dh.utc_now_pretty()``
+
+-  **``Collection.now_utc_float_string``** (property) - Current
+   timestamp as string
+
+   -  Returns: Current UTC timestamp as string
+   -  Internal calls: ``dh.utc_now_float_string()``
+
+-  **``Collection.info``** (property) - Complete system state and
+   configuration summary
+
+   -  Returns: Formatted string with initialization args, size, last
+      update, keyspace structure, and index statistics
+   -  Internal calls: ``self.size``, ``self.last_update_admin``,
+      ``self.keyspace``, ``self.index_field_info()``,
+      ``self.get_stats()``, ``self.get()``
+
+-  **``Collection.keyspace``** (property) - Redis key structure for
+   debugging and monitoring
+
+   -  Returns: Sorted list of (key_name, key_type) tuples showing all
+      Redis keys used by this collection
+   -  Internal calls: ``ih.decode()``
+
+-  **``Collection.is_locked``** (property) - Check if collection is
+   currently locked
+
+   -  Returns: Boolean lock status
+   -  Internal calls: ``ih.from_string()``, ``ih.decode()``
+
+Statistics and Analysis
+~~~~~~~~~~~~~~~~~~~~~~~
+
+-  **``Collection.get_stats(limit=5)``** - Access pattern analysis for
+   items and fields accessed by get() method
+
+   -  ``limit`` (int): Number of top items to return in statistics
+   -  Returns: Dictionary with keys: ``counts`` (access frequency),
+      ``fields`` (field access patterns), ``timestamps`` (access timing)
+   -  Internal calls: ``dh.utc_float_to_pretty()``, ``ih.decode()``
+
+-  **``Collection.find_stats(limit=5)``** - Summary info about temporary
+   sets created during find calls
+
+   -  ``limit`` (int): Number of top search patterns to return
+   -  Returns: Dictionary with keys: ``counts``, ``sizes``,
+      ``timestamps``
+   -  Internal calls: ``ih.decode()``, ``rh.zshow()``,
+      ``dh.utc_float_to_pretty()``
+
+-  **``Collection.init_stats(cls, limit=5)``** (classmethod) -
+   Collection creation statistics across all collections
+
+   -  ``limit`` (int): Number of entries to return
+   -  Returns: Dictionary with collection initialization patterns
+   -  Internal calls: ``dh.utc_float_to_pretty()``, ``ih.decode()``
+
+-  **``Collection.index_field_info(limit=10)``** - Data distribution
+   analysis for indexed fields
+
+   -  ``limit`` (int): Number of top values per index to return
+   -  Returns: List of 2-item tuples with field names and their top
+      values/counts
+   -  Internal calls: ``self.size``, ``ih.decode()``, ``rh.zshow()``
+
+-  **``Collection.top_values_for_index(index_name, limit=10)``** - Most
+   common values for specific index
+
+   -  ``index_name`` (str): Name of indexed field to analyze
+   -  ``limit`` (int): Number of top values to return
+   -  Returns: List of (value, count) tuples
+   -  Internal calls: ``self.recent_unique_values()``
+
+Historical Data Access
+~~~~~~~~~~~~~~~~~~~~~~
+
+-  **``Collection.old_data_for_hash_id(hash_id)``** - Change history for
+   specific item
+
+   -  ``hash_id`` (str): Item to get history for
+   -  Returns: List of dictionaries with change history including
+      timestamps, fields, and values
+   -  Internal calls: ``ih.decode()``, ``dh.utc_float_to_pretty()``
+
+-  **``Collection.old_data_for_unique_value(unique_val)``** - Change
+   history by unique field value
+
+   -  ``unique_val``: Unique field value to get history for
+   -  Returns: List of change history dictionaries
+   -  Internal calls: ``self.get_hash_id_for_unique_value()``,
+      ``self.old_data_for_hash_id()``
+
+-  **``Collection.recent_unique_values(limit=10)``** - Most recently
+   used unique field values
+
+   -  ``limit`` (int): Number of values to return
+   -  Returns: List of unique values ordered by recent use
+   -  Internal calls: ``ih.decode()``
+
+-  **``Collection.all_unique_values()``** - All unique field values in
+   collection
+
+   -  Returns: List of all unique field values
+   -  Internal calls: ``self.recent_unique_values()``
+
+Utility Methods
+~~~~~~~~~~~~~~~
+
+-  **``Collection.wait_for_unlock(sleeptime=0.5)``** - Wait for
+   collection to become unlocked
+
+   -  ``sleeptime`` (float): Seconds to sleep between lock checks
+   -  Returns: Total time slept
+   -  Internal calls: ``self.is_locked``
+
+-  **``Collection.clear_find_stats()``** - Reset query statistics
+
+   -  Returns: None
+   -  Internal calls: None
+
+-  **``Collection.clear_get_stats()``** - Reset access statistics
+
+   -  Returns: None
+   -  Internal calls: None
+
+-  **``Collection.clear_init_stats()``** - Reset initialization
+   statistics
+
+   -  Returns: None
+   -  Internal calls: None
+
+-  **``Collection.clear_all_collection_locks(cls)``** (classmethod) -
+   Remove all collection locks (emergency use)
+
+   -  Returns: None
+   -  Internal calls: ``cls.init_stats()``
+
+-  **``Collection.report_all(cls)``** (classmethod) - Generate report of
+   all collections
+
+   -  Returns: None (prints report)
+   -  Internal calls: None
+
+Container Protocol Support
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Collection class implements Python’s container protocols for
+intuitive access:
+
+-  ``collection[0]`` - Get item by position (most recent first)
+-  ``collection['hash_id']`` - Get item by direct hash ID
+-  ``collection['unique_value']`` - Get item by unique field value
+   (falls back to random sample)
+-  ``collection[0:10]`` - Get slice of items
+-  ``len(collection)`` - Get total item count
+-  ``for item in collection:`` - Iterate through all items
