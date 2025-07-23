@@ -18,10 +18,7 @@ pip install redis-helper
 
 ### Dependency Incompatibility
 
-Note that when using hiredis v1.1.0, redis-py v5.0.8 (last release on Python
-3.7) is not compatible. Either use a newer version of hiredis or redis-py 5.0.7
-(on Python 3.7). Newer versions of redis-py (i.e. 5.1.0+ on Python 3.8 - 3.11)
-are compatible with hiredis v1.1.0.
+Note that when using hiredis v1.1.0, redis-py v5.0.8 (last release on Python 3.7) is not compatible. Either use a newer version of hiredis or redis-py 5.0.7 (on Python 3.7). Newer versions of redis-py (i.e. 5.1.0+ on Python 3.8 - 3.11) are compatible with hiredis v1.1.0.
 
 ## Configuration
 
@@ -136,6 +133,8 @@ Running this example gives you immediate access to sophisticated data analytics 
 [sorted set commands]: https://redis.io/commands#sorted_set
 
 Redis is a fast in-memory **data structure server**, where each stored object is referenced by a key name. Objects in Redis correspond to one of several basic types, each having their own set of specialized commands to perform operations. The [redis Python package][redis-py] provides the [StrictRedis][] class, which contains methods that correspond to all of the Redis server commands, which redis-helper uses under the hood.
+
+Tested for Python 3.5 - 3.13 against Redis 6 docker container.
 
 When initializing Collection objects, you must specify the "namespace" and "name" of the collection (which are used to create the internally used `_base_key` property). All Redis keys associated with a Collection will have a name pattern that starts with the `_base_key`.
 
